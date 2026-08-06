@@ -41,7 +41,11 @@ def load_live_idd():
         return None, {}, {}
     series = {}
     for row in read_csv(path):
+        # The v2 API ignores the c[AGE] filter, so the CSV carries every age
+        # breakdown and definition; keep total population, current definition.
         if row.get("MEASURE") != "INC_DISP_GINI":
+            continue
+        if row.get("AGE") != "_T" or row.get("DEFINITION") != "D_CUR":
             continue
         iso3 = row.get("REF_AREA", "")
         try:
