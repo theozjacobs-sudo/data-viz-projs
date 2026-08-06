@@ -3,10 +3,24 @@
 An interactive dashboard answering: **which country has the best economic
 mobility, and how has that changed over time?** Built on the OECD SDMX API.
 
-**Status: work in progress** — waiting on network access to `sdmx.oecd.org`
-from the build environment to pull the live Income Distribution Database.
-The curated intergenerational-mobility snapshot (`data/mobility_snapshot.csv`)
-is in place; see `data/SOURCES.md` for provenance and verification status.
+**Status: v1 shipped on provisional data.** The dashboard (`site/index.html`)
+is built and published; because `sdmx.oecd.org` wasn't reachable from the build
+environment, Gini figures are curated from OECD/World Bank publications rather
+than pulled live (see `data/SOURCES.md`). Re-running `fetch_oecd.py` +
+`build_data.py` with network access upgrades everything to live API data —
+the page shows a "provisional data" banner until then.
+
+## The answer (v1)
+
+**Denmark** has the best measured economic mobility: 2 generations for a
+bottom-decile family to reach mean income, the weakest parent-child earnings
+persistence, and near-lowest inequality. Norway, Finland and Sweden follow at
+3 generations; the US and UK sit at 5 (below the 4.5-generation OECD average);
+Brazil and South Africa need 9, Colombia 11. Over time the ladder's rungs have
+moved apart: inequality rose almost everywhere since the mid-1980s — fastest
+in the Nordics that started most equal, and from an already-high base in the
+US/UK — which the Great Gatsby relationship suggests means slower elevators
+ahead. France (flat for 40 years) is the main counter-example.
 
 ## Layout
 

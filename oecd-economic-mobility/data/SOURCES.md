@@ -16,6 +16,18 @@
   (approximate readings — TO VERIFY against the report PDF once network access
   to oecd.org is available).
 
+## gini_provisional.csv (PROVISIONAL — to be replaced by live SDMX data)
+
+Gini coefficients of *equivalised disposable household income, post taxes and
+transfers* (OECD Income Distribution Database definitions). Curated from memory
+of the IDD and spot-checked against public summaries (Statista chart 1461858;
+statbase.org; UK House of Commons Library CBP-7484); rows with
+`scope=world_bank` are World Bank income Ginis on a broadly comparable scale
+for non-IDD countries and are less comparable — treat as indicative.
+`gini_mid80s` values are the OECD historical series (~1983–1989 anchor years).
+**Every value in this file is superseded the moment `scripts/fetch_oecd.py`
+can reach sdmx.oecd.org** — `build_data.py` prefers `idd_data.csv` when present.
+
 ## Status
 
 - [ ] Verify OECD2018-sourced elasticities against the report PDF
