@@ -1,0 +1,31 @@
+iso3,country,generations_to_mean_income,earnings_elasticity,elasticity_source
+DNK,Denmark,2,0.12,OECD2018
+NOR,Norway,3,0.17,Corak2013
+FIN,Finland,3,0.18,Corak2013
+SWE,Sweden,3,0.27,Corak2013
+ESP,Spain,4,0.40,Corak2013
+BEL,Belgium,4,0.41,OECD2018
+NZL,New Zealand,4,0.29,Corak2013
+CAN,Canada,4,0.19,Corak2013
+GRC,Greece,4,0.35,OECD2018
+AUS,Australia,4,0.26,Corak2013
+NLD,Netherlands,4,0.45,OECD2018
+JPN,Japan,4,0.34,Corak2013
+PRT,Portugal,5,0.42,OECD2018
+IRL,Ireland,5,0.39,OECD2018
+GBR,United Kingdom,5,0.50,Corak2013
+ITA,Italy,5,0.50,Corak2013
+CHE,Switzerland,5,0.46,Corak2013
+USA,United States,5,0.47,Corak2013
+AUT,Austria,5,0.39,OECD2018
+KOR,South Korea,5,0.40,OECD2018
+DEU,Germany,6,0.32,Corak2013
+FRA,France,6,0.41,Corak2013
+CHL,Chile,6,0.52,Corak2013
+ARG,Argentina,6,0.55,Corak2013
+HUN,Hungary,7,0.55,OECD2018
+CHN,China,7,0.60,Corak2013
+IND,India,7,0.58,OECD2018
+BRA,Brazil,9,0.58,Corak2013
+ZAF,South Africa,9,0.62,OECD2018
+COL,Colombia,11,0.71,OECD2018
