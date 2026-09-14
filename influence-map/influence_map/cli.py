@@ -3,6 +3,7 @@
   python -m influence_map estimate BOOK.epub [--threshold 3] [--model claude-haiku-4-5] [--batch]
   python -m influence_map ingest BOOK.epub [BOOK2.epub ...] [--db library.db] [--batch] [--model ...]
   python -m influence_map paragraphs BOOK.epub     # dump what would be sent, to sanity-check the filter
+  python -m influence_map audit BOOK.epub          # spend a few cents to measure what the filter misses
   python -m influence_map serve [--db library.db] [--port 8000]
 """
 from __future__ import annotations
@@ -12,7 +13,7 @@ import sys
 
 from . import db as dbm
 from .llm import CANON_MODEL, EXTRACT_MODEL
-from .pipeline import ingest, plan
+from .pipeline import audit, ingest, plan
 
 
 def main(argv=None):
@@ -28,6 +29,8 @@ def main(argv=None):
     e = sub.add_parser("estimate"); e.add_argument("files", nargs="+"); common(e)
     i = sub.add_parser("ingest"); i.add_argument("files", nargs="+"); i.add_argument("--db", default="library.db"); common(i)
     d = sub.add_parser("paragraphs"); d.add_argument("file"); common(d)
+    au = sub.add_parser("audit", help="sample dropped paragraphs through the model to measure prefilter recall")
+    au.add_argument("file"); au.add_argument("--sample", type=int, default=60); common(au)
     s = sub.add_parser("serve"); s.add_argument("--db", default="library.db"); s.add_argument("--port", type=int, default=8000); s.add_argument("--host", default="127.0.0.1")
     a = ap.parse_args(argv)
 
@@ -45,6 +48,8 @@ def main(argv=None):
         p = plan(a.file, a.threshold, a.model, a.batch)
         for c in p.chunks:
             print(c.text); print("\n" + "=" * 80 + "\n")
+    elif a.cmd == "audit":
+        audit(a.file, a.sample, a.threshold, a.model)
     elif a.cmd == "ingest":
         con = dbm.connect(a.db)
         for f in a.files:

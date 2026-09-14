@@ -92,3 +92,47 @@ def ingest(con, path: str, threshold: int = 3, model: str = EXTRACT_MODEL, canon
             con.execute("UPDATE books SET status='error', error=? WHERE id=?", (str(e)[:500], book_id))
         raise
     return book_id
+
+
+def audit(path: str, sample: int = 60, threshold: int = 3, model: str = EXTRACT_MODEL, seed: int = 0, log=print) -> dict:
+    """Measure what the prefilter misses on one book: send a random sample of DROPPED paragraphs to
+    the model and count how many contained a mention. Costs a few cents. Also reports the
+    per-paragraph rate on KEPT paragraphs from a smaller sample, so you can compare."""
+    import random
+
+    from .prefilter import pack, score
+
+    book = load(path)
+    dropped = [p for p in book.paragraphs if score(p) < threshold]
+    kept = [p for p in book.paragraphs if score(p) >= threshold]
+    rng = random.Random(seed)
+    d_sample = rng.sample(dropped, min(sample, len(dropped)))
+    k_sample = rng.sample(kept, min(sample // 2, len(kept)))
+    ex = get_extractor(model=model)
+
+    def rate(paras):
+        if not paras:
+            return 0, 0, []
+        ments = ex.extract(pack(sorted(paras, key=lambda p: p.idx)))
+        hit_paras = {m.paragraph for m in ments}
+        return len(hit_paras), len(paras), ments
+
+    dh, dn, dm = rate(d_sample)
+    kh, kn, km = rate(k_sample)
+    est_missed = round(len(dropped) * (dh / dn if dn else 0))
+    est_found = round(len(kept) * (kh / kn if kn else 0))
+    recall = est_found / (est_found + est_missed) if (est_found + est_missed) else 1.0
+    res = {
+        "book": book.title, "paragraphs": len(book.paragraphs), "kept": len(kept), "dropped": len(dropped),
+        "dropped_sampled": dn, "dropped_with_mention": dh, "kept_sampled": kn, "kept_with_mention": kh,
+        "est_paragraphs_missed": est_missed, "est_paragraph_recall": round(recall, 3),
+        "missed_examples": [f"¶{m.paragraph} {m.title}" + (f" ({m.creator})" if m.creator else "") for m in dm][:25],
+        "usd": round(ex.usage.cost(), 4),
+    }
+    log(f"{book.title}: {len(kept)} kept / {len(dropped)} dropped at threshold {threshold}")
+    log(f"  dropped sample: {dh}/{dn} paragraphs had a mention  ->  ~{est_missed} missed paragraphs in the whole book")
+    log(f"  kept sample:    {kh}/{kn} paragraphs had a mention  ->  ~{est_found} found")
+    log(f"  estimated paragraph-level recall: {recall:.0%}   (cost of this audit: ${ex.usage.cost():.3f})")
+    if dm:
+        log("  examples the filter missed: " + "; ".join(res["missed_examples"][:10]))
+    return res

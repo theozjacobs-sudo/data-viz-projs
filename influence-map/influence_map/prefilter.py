@@ -11,6 +11,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
+from . import gazetteer
 from .epub_text import Paragraph
 
 WORK_WORDS = re.compile(
@@ -49,6 +50,11 @@ def score(p: Paragraph) -> int:
     # A block with several proper nouns is more likely to name a person or work.
     if len(PROPER_NOUN.findall(p.text)) >= 3:
         s += 1
+    names, titles = gazetteer.hits(p.text)
+    if titles:
+        s += 3  # a known title is enough on its own
+    if names:
+        s += 2  # a known creator's name: enough with any other weak signal
     return s
 
 
