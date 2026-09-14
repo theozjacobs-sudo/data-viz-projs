@@ -59,8 +59,16 @@ The prefilter scores each paragraph on cheap signals: italics or `<cite>`, a quo
 phrase, a set-off quotation or verse block, SMALL CAPS titles (old transcriptions), work vocabulary
 ("novel", "film", "painting", "wrote"), several proper nouns, and hits against a gazetteer of
 notable creators and titles pulled from Wikidata (`data/gazetteer.json.gz`: about 10,000 surnames,
-13,000 full names and 6,700 titles; rebuilt with `scripts/build_gazetteer.py`, which is slow because
-Wikidata throttles anonymous queries). Common-word surnames such as Wells, Swift, Gray or Pope only count
+13,500 full names and 6,700 titles). The title list is weak on novels, poems, plays and musical works:
+Wikidata's query service was degraded when this was built and returned empty results for those
+classes. To fill them in later, retry just those classes and merge:
+
+```bash
+python scripts/build_gazetteer.py --merge data/gazetteer.json.gz \
+    --only Q8261,Q5185279,Q25379,Q207628,Q1344 --out data/gazetteer.json.gz
+```
+
+The script sleeps a minute between queries because Wikidata throttles anonymous clients. Common-word surnames such as Wells, Swift, Gray or Pope only count
 when introduced by an honorific or initials ("Mr. Wells", "H. G. Wells").
 
 To test it, every paragraph the first version dropped on two Gutenberg books was graded by hand
