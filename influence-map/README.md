@@ -58,17 +58,23 @@ on a book where Haiku misses allusions. The estimate includes a fixed ~$0.05 for
 The prefilter scores each paragraph on cheap signals: italics or `<cite>`, a quoted Title-Case
 phrase, a set-off quotation or verse block, SMALL CAPS titles (old transcriptions), work vocabulary
 ("novel", "film", "painting", "wrote"), several proper nouns, and hits against a gazetteer of
-notable creators and titles pulled from Wikidata (`data/gazetteer.json.gz`: about 10,000 surnames,
-13,500 full names and 6,700 titles). The title list is weak on novels, poems, plays and musical works:
-Wikidata's query service was degraded when this was built and returned empty results for those
-classes. To fill them in later, retry just those classes and merge:
+notable creators and titles (`data/gazetteer.json.gz`: about 17,000 surnames, 27,500 full names, 53,000 titles). Common-word surnames such as Wells, Swift, Gray or
+Pope only count when introduced by an honorific or initials ("Mr. Wells", "H. G. Wells").
+
+The gazetteer is merged from three sources by `scripts/build_gazetteer.py`:
+
+- **DBpedia** (mirror of English Wikipedia, answers in seconds): writers, philosophers, painters,
+  poets, books, plays, poems, artworks, films, albums, kept when enough other Wikipedia pages link
+  to them. This is the main source.
+- **Project Gutenberg catalogue**: every pre-1930 author with three or more texts and ~45,000
+  titles. This is the canon older books cite, and it never rate-limits.
+- **Wikidata**: cross-language notability. Optional (`--sources dbpedia,gutenberg,wikidata`); its
+  query service throttles to one request a minute and was returning empty results when this was
+  built, so the default build skips it.
 
 ```bash
-python scripts/build_gazetteer.py --merge data/gazetteer.json.gz \
-    --only Q8261,Q5185279,Q25379,Q207628,Q1344 --out data/gazetteer.json.gz
-```
-
-The script sleeps a minute between queries because Wikidata throttles anonymous clients. Common-word surnames such as Wells, Swift, Gray or Pope only count
+python scripts/build_gazetteer.py --words words10k.txt --merge data/gazetteer.json.gz --out data/gazetteer.json.gz
+``` Common-word surnames such as Wells, Swift, Gray or Pope only count
 when introduced by an honorific or initials ("Mr. Wells", "H. G. Wells").
 
 To test it, every paragraph the first version dropped on two Gutenberg books was graded by hand
@@ -79,7 +85,7 @@ unnamed allusions, and paragraphs that only name an author. After the fixes abov
 | Threshold | Woolf: sent / cost / work-paragraphs still missed | Chesterton: sent / cost / missed |
 |---|---|---|
 | 0 (default) | 100% / $0.23 / 0 | 100% / $0.21 / 0 |
-| 3 | 84% / $0.22 / 5 of 69 | 72% / $0.18 / 8 of 44 |
+| 3 | 87% / $0.22 / 2 of 69 | 76% / $0.18 / 6 of 44 |
 | 4 | 66% / $0.20 / 34 of 69 | 59% / $0.16 / 13 of 44 |
 
 The dropped paragraphs are the short ones, so the filter saves little money on Haiku and costs
