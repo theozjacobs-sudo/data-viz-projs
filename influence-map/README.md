@@ -58,8 +58,9 @@ on a book where Haiku misses allusions. The estimate includes a fixed ~$0.05 for
 The prefilter scores each paragraph on cheap signals: italics or `<cite>`, a quoted Title-Case
 phrase, a set-off quotation or verse block, SMALL CAPS titles (old transcriptions), work vocabulary
 ("novel", "film", "painting", "wrote"), several proper nouns, and hits against a gazetteer of
-notable creators and titles pulled from Wikidata (`data/gazetteer.json.gz`, rebuilt with
-`scripts/build_gazetteer.py`). Common-word surnames such as Wells, Swift, Gray or Pope only count
+notable creators and titles pulled from Wikidata (`data/gazetteer.json.gz`: about 10,000 surnames,
+13,000 full names and 6,700 titles; rebuilt with `scripts/build_gazetteer.py`, which is slow because
+Wikidata throttles anonymous queries). Common-word surnames such as Wells, Swift, Gray or Pope only count
 when introduced by an honorific or initials ("Mr. Wells", "H. G. Wells").
 
 To test it, every paragraph the first version dropped on two Gutenberg books was graded by hand
@@ -70,8 +71,8 @@ unnamed allusions, and paragraphs that only name an author. After the fixes abov
 | Threshold | Woolf: sent / cost / work-paragraphs still missed | Chesterton: sent / cost / missed |
 |---|---|---|
 | 0 (default) | 100% / $0.23 / 0 | 100% / $0.21 / 0 |
-| 3 | 82% / $0.22 / 9 of 69 | 63% / $0.16 / 15 of 44 |
-| 4 | 62% / $0.20 / 38 of 69 | 49% / $0.14 / 20 of 44 |
+| 3 | 84% / $0.22 / 5 of 69 | 72% / $0.18 / 8 of 44 |
+| 4 | 66% / $0.20 / 34 of 69 | 59% / $0.16 / 13 of 44 |
 
 The dropped paragraphs are the short ones, so the filter saves little money on Haiku and costs
 real recall. That is why the default is now to send everything. The remaining misses at threshold

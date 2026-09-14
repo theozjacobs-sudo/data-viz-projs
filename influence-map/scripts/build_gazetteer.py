@@ -74,7 +74,10 @@ def main():
     ap.add_argument("--min-links-works", type=int, default=25)
     ap.add_argument("--words", default="", help="common English word list; names/titles in it are excluded")
     ap.add_argument("--out", default="data/gazetteer.json.gz")
+    ap.add_argument("--merge", default="", help="existing gazetteer to merge into (use with --only to retry failed classes)")
+    ap.add_argument("--only", default="", help="comma-separated QIDs to fetch; others are skipped")
     a = ap.parse_args()
+    only = {q.strip() for q in a.only.split(",") if q.strip()}
 
     common = set()
     if a.words:
@@ -82,6 +85,8 @@ def main():
 
     names: dict[str, int] = {}
     for qid, label in CREATOR_CLASSES.items():
+        if only and qid not in only:
+            continue
         rows = fetch_creators(qid, a.min_links)
         print(f"{label}: {len(rows)}", file=sys.stderr, flush=True)
         for name, links in rows:
@@ -106,6 +111,8 @@ def main():
 
     titles: dict[str, str] = {}
     for qid, kind in WORK_CLASSES.items():
+        if only and qid not in only:
+            continue
         rows = fetch_works(qid, a.min_links_works)
         print(f"{kind} {qid}: {len(rows)}", file=sys.stderr, flush=True)
         for t, links in rows:
@@ -118,6 +125,14 @@ def main():
                 continue  # "The Road", "Little Women" style titles are too common as phrases
             titles[t] = kind
 
+    if a.merge:
+        with gzip.open(a.merge, "rt", encoding="utf-8") as f:
+            prev = json.load(f)
+        for k in prev.get("surnames", []):
+            surnames.setdefault(k, 0)
+        surnames_common.update(prev.get("surnames_common", []))
+        fullnames.update(prev.get("fullnames", []))
+        titles = {**prev.get("titles", {}), **titles}
     out = {"surnames": sorted(surnames), "surnames_common": sorted(surnames_common), "fullnames": sorted(fullnames), "titles": titles}
     with gzip.open(a.out, "wt", encoding="utf-8") as f:
         json.dump(out, f, ensure_ascii=False)
