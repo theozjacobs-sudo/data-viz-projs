@@ -1,0 +1,8 @@
+anthropic>=1.5
+ebooklib>=0.18
+beautifulsoup4>=4.12
+lxml>=5
+fastapi>=0.110
+uvicorn[standard]>=0.29
+python-multipart>=0.0.9
+pydantic>=2

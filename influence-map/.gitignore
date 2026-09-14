@@ -1,0 +1,6 @@
+*.db
+*.db-journal
+uploads/
+__pycache__/
+.env
+.pytest_cache/
