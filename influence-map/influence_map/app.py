@@ -57,7 +57,7 @@ def make_app(db_path: str = "library.db", upload_dir: str = "uploads") -> FastAP
           <form method='post' action='/upload' enctype='multipart/form-data' class='upload'>
             <input type='file' name='files' accept='.epub,.txt' multiple required>
             <label>Extraction model <select name='model'>{opts}</select></label>
-            <label>Filter strictness <input type='number' name='threshold' value='3' min='0' max='6' title='0 sends every paragraph'></label>
+            <label>Prefilter <input type='number' name='threshold' value='0' min='0' max='6' title='0 sends every body paragraph (recommended on Haiku); 3 skips paragraphs with no title signal, saving 10-40% on Opus'></label>
             <label><input type='checkbox' name='batch' value='1'> Batch API (half price, up to an hour)</label>
             <button type='submit'>Upload &amp; scan</button>
           </form>
@@ -85,7 +85,7 @@ def make_app(db_path: str = "library.db", upload_dir: str = "uploads") -> FastAP
 
     @app.post("/upload")
     async def upload(background: BackgroundTasks, files: list[UploadFile] = File(...), model: str = Form(EXTRACT_MODEL),
-                     threshold: int = Form(3), batch: str | None = Form(None)):
+                     threshold: int = Form(0), batch: str | None = Form(None)):
         paths = []
         for f in files:
             name = os.path.basename(f.filename or "book.epub")

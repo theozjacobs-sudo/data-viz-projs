@@ -34,16 +34,21 @@ WORK_CLASSES = {
 }
 
 
-def sparql(query: str, retries: int = 4) -> list[dict]:
+PAUSE = 62  # WDQS sometimes rate-limits anonymous clients to one request a minute; be polite by default
+
+
+def sparql(query: str, retries: int = 6) -> list[dict]:
     url = ENDPOINT + "?" + urllib.parse.urlencode({"query": query, "format": "json"})
     for i in range(retries):
         try:
             req = urllib.request.Request(url, headers={"User-Agent": UA, "Accept": "application/sparql-results+json"})
-            with urllib.request.urlopen(req, timeout=180) as r:
-                return json.load(r)["results"]["bindings"]
-        except Exception as e:  # timeouts and 429s are routine
-            print("  retry", i, e, file=sys.stderr)
-            time.sleep(5 * (i + 1))
+            with urllib.request.urlopen(req, timeout=300) as r:
+                rows = json.load(r)["results"]["bindings"]
+            time.sleep(PAUSE)
+            return rows
+        except Exception as e:  # timeouts, 429s and truncated bodies are routine
+            print("  retry", i, e, file=sys.stderr, flush=True)
+            time.sleep(PAUSE * (i + 1))
     return []
 
 
@@ -78,27 +83,31 @@ def main():
     names: dict[str, int] = {}
     for qid, label in CREATOR_CLASSES.items():
         rows = fetch_creators(qid, a.min_links)
-        print(f"{label}: {len(rows)}", file=sys.stderr)
+        print(f"{label}: {len(rows)}", file=sys.stderr, flush=True)
         for name, links in rows:
             if re.search(r"[^\w\s.'’\-]", name) or len(name) > 40:
                 continue
             names[name] = max(names.get(name, 0), links)
 
     surnames: dict[str, int] = {}
+    surnames_common: set[str] = set()  # Gray, Pope, Lamb, Wells, Swift: only count with an honorific or initial
     fullnames: set[str] = set()
     for name, links in names.items():
         parts = name.replace(".", " ").split()
         if len(parts) >= 2:
             fullnames.add(name)
         last = parts[-1]
-        if len(last) < 4 or last.lower() in common or not last[0].isupper():
-            continue  # Gray, Pope, Lamb, Young, James... too ambiguous as bare surnames
+        if len(last) < 4 or not last[0].isupper():
+            continue
+        if last.lower() in common:
+            surnames_common.add(last)
+            continue
         surnames[last] = max(surnames.get(last, 0), links)
 
     titles: dict[str, str] = {}
     for qid, kind in WORK_CLASSES.items():
         rows = fetch_works(qid, a.min_links_works)
-        print(f"{kind} {qid}: {len(rows)}", file=sys.stderr)
+        print(f"{kind} {qid}: {len(rows)}", file=sys.stderr, flush=True)
         for t, links in rows:
             if len(t) < 4 or len(t) > 60 or re.search(r"[\(\)\[\]:/]", t):
                 continue
@@ -109,10 +118,10 @@ def main():
                 continue  # "The Road", "Little Women" style titles are too common as phrases
             titles[t] = kind
 
-    out = {"surnames": sorted(surnames), "fullnames": sorted(fullnames), "titles": titles}
+    out = {"surnames": sorted(surnames), "surnames_common": sorted(surnames_common), "fullnames": sorted(fullnames), "titles": titles}
     with gzip.open(a.out, "wt", encoding="utf-8") as f:
         json.dump(out, f, ensure_ascii=False)
-    print(f"wrote {a.out}: {len(surnames)} surnames, {len(fullnames)} full names, {len(titles)} titles", file=sys.stderr)
+    print(f"wrote {a.out}: {len(surnames)} surnames, {len(surnames_common)} common-word surnames, {len(fullnames)} full names, {len(titles)} titles", file=sys.stderr, flush=True)
 
 
 if __name__ == "__main__":

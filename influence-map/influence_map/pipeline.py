@@ -26,7 +26,7 @@ def load(path: str) -> Book:
     return load_txt(path)
 
 
-def plan(path: str, threshold: int = 3, model: str = EXTRACT_MODEL, batch: bool = False) -> Plan:
+def plan(path: str, threshold: int = 0, model: str = EXTRACT_MODEL, batch: bool = False) -> Plan:
     book = load(path)
     kept = select(book.paragraphs, threshold)
     chunks = pack(kept)
@@ -51,7 +51,7 @@ def _attach(mentions: list[Mention], works: list[CanonicalWork]):
     return pairs
 
 
-def ingest(con, path: str, threshold: int = 3, model: str = EXTRACT_MODEL, canon_model: str = CANON_MODEL,
+def ingest(con, path: str, threshold: int = 0, model: str = EXTRACT_MODEL, canon_model: str = CANON_MODEL,
            batch: bool = False, progress=None, log=print) -> int:
     t0 = time.time()
     p = plan(path, threshold, model, batch)

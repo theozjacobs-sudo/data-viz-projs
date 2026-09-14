@@ -1,6 +1,6 @@
 """CLI.
 
-  python -m influence_map estimate BOOK.epub [--threshold 3] [--model claude-haiku-4-5] [--batch]
+  python -m influence_map estimate BOOK.epub [--threshold 0] [--model claude-haiku-4-5] [--batch]
   python -m influence_map ingest BOOK.epub [BOOK2.epub ...] [--db library.db] [--batch] [--model ...]
   python -m influence_map paragraphs BOOK.epub     # dump what would be sent, to sanity-check the filter
   python -m influence_map audit BOOK.epub          # spend a few cents to measure what the filter misses
@@ -21,7 +21,7 @@ def main(argv=None):
     sub = ap.add_subparsers(dest="cmd", required=True)
 
     def common(p):
-        p.add_argument("--threshold", type=int, default=3, help="prefilter score needed to send a paragraph (0 = send all)")
+        p.add_argument("--threshold", type=int, default=0, help="prefilter score needed to send a paragraph; 0 (default) sends every body paragraph, 3 is the cost-saving setting")
         p.add_argument("--model", default=EXTRACT_MODEL)
         p.add_argument("--canon-model", default=CANON_MODEL)
         p.add_argument("--batch", action="store_true", help="use the Batch API (half price, up to an hour)")
