@@ -6,6 +6,8 @@ from urllib.parse import quote_plus
 
 def link_for(title: str, creator: str | None, kind: str) -> str:
     q = quote_plus(f"{title} {creator or ''}".strip())
+    if kind == "person":
+        return f"https://openlibrary.org/search/authors?q={quote_plus(title)}"
     if kind in ("film",):
         return f"https://letterboxd.com/search/{q}/"
     if kind == "artwork":

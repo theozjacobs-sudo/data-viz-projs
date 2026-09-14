@@ -36,6 +36,7 @@ NOTE_HEADING_RE = re.compile(
 )
 # A block that starts with a note number / marker, e.g. "12. See ...", "[3] ...", "† ..."
 NOTE_PARA_RE = re.compile(r"^\s*(\[\d{1,3}\]|\d{1,3}\.|[†‡§*]{1,3})\s")
+QUOTE_CLASS_RE = re.compile(r"(poem|poetry|stanza|verse|quot|epigraph|citation|extract|lyric)", re.I)
 BLOCK_TAGS = ["p", "li", "blockquote", "h1", "h2", "h3", "h4", "h5", "h6", "dd", "dt", "td", "pre", "div"]
 
 
@@ -45,6 +46,7 @@ class Paragraph:
     text: str
     has_emphasis: bool  # contained <i>/<em>/<cite> — the usual typographic signal for a title
     chapter: str
+    is_quote: bool = False  # blockquote / verse / epigraph markup, or a short block wrapped in quotation marks
 
 
 @dataclass
@@ -124,6 +126,19 @@ def _blocks(soup: BeautifulSoup):
         yield tag
 
 
+def _is_quote(block: Tag, text: str) -> bool:
+    if block.name == "blockquote" or block.find_parent("blockquote") is not None:
+        return True
+    for t in [block, *block.parents]:
+        if isinstance(t, Tag) and t.name != "[document]" and QUOTE_CLASS_RE.search(_attr_words(t, "class")):
+            return True
+    return _text_is_quote(text)
+
+
+def _text_is_quote(text: str) -> bool:
+    return len(text.split()) <= 80 and text[:1] in "\"“‘'" and text.rstrip(".,;!?")[-1:] in "\"”’'"
+
+
 def _looks_like_toc(text: str) -> bool:
     """A contents list or index rendered as one block: mostly Title Case, no sentence punctuation."""
     words = text.split()
@@ -167,7 +182,7 @@ def load_epub(path: str) -> Book:
             if block.name in {"h1", "h2", "h3", "h4", "h5", "h6"} and NOTE_HEADING_RE.match(text):
                 continue
             has_emph = block.find(["i", "em", "cite"]) is not None
-            paragraphs.append(Paragraph(idx=idx, text=text, has_emphasis=has_emph, chapter=chapter))
+            paragraphs.append(Paragraph(idx=idx, text=text, has_emphasis=has_emph, chapter=chapter, is_quote=_is_quote(block, text)))
             idx += 1
     return Book(title=title, author=author, paragraphs=paragraphs)
 
@@ -179,5 +194,5 @@ def load_txt(path: str, title: str = "", author: str = "") -> Book:
     for i, chunk in enumerate(re.split(r"\n\s*\n", raw)):
         text = re.sub(r"\s+", " ", chunk).strip()
         if len(text) >= 20 and not NOTE_PARA_RE.match(text):
-            paras.append(Paragraph(idx=len(paras), text=text, has_emphasis=False, chapter=""))
+            paras.append(Paragraph(idx=len(paras), text=text, has_emphasis=False, chapter="", is_quote=_text_is_quote(text)))
     return Book(title=title or path.rsplit("/", 1)[-1], author=author or "Unknown", paragraphs=paras)

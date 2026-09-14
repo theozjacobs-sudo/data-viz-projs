@@ -117,6 +117,7 @@ def recommendations(con, limit: int = 100):
                   SUM(m.how IN ('discussed','quoted')) AS n_engaged,
                   GROUP_CONCAT(DISTINCT b.author) AS cited_by
            FROM mentions m JOIN works w ON w.id=m.work_id JOIN books b ON b.id=m.book_id
+           WHERE w.kind <> 'person'
            GROUP BY w.id ORDER BY n_books DESC, n_engaged DESC, n_mentions DESC LIMIT ?""",
         (limit * 2,),
     ).fetchall()

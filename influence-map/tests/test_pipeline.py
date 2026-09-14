@@ -119,3 +119,41 @@ def test_web_app(tmp_path, book_path):
     assert "What to read next" in client.get("/reading").text
     r = client.post(f"/book/{books[0]['id']}/delete", follow_redirects=False)
     assert r.status_code == 303 and client.get("/api/books").json() == []
+
+
+def test_prefilter_new_signals():
+    from influence_map.epub_text import Paragraph
+    from influence_map.prefilter import score
+
+    verse = Paragraph(idx=1, text="“If England was what England seems”", has_emphasis=False, chapter="", is_quote=True)
+    assert score(verse) >= 3
+    caps = Paragraph(idx=2, text="We know that the hero of GHOSTS is mad, and we know why he is mad.", has_emphasis=False, chapter="")
+    assert score(caps) >= 2
+    trailing = Paragraph(idx=3, text="Mr. Shaw’s philosophy was that presented in “The Quintessence of Ibsenism.” It was brief.", has_emphasis=False, chapter="")
+    assert score(trailing) >= 3
+    plain = Paragraph(idx=4, text="The tower still rises ninety feet into the air, and the arch still stands.", has_emphasis=False, chapter="")
+    assert score(plain) < 3
+
+
+def test_quote_block_detection(tmp_path):
+    from influence_map.epub_text import load_epub
+
+    b = epub.EpubBook(); b.set_identifier("q"); b.set_title("Q"); b.set_language("en"); b.add_author("A")
+    ch = epub.EpubHtml(title="c", file_name="c.xhtml", lang="en")
+    ch.content = """<html><body><p>Some ordinary sentence about nothing much at all here.</p>
+      <p class="poem">I tell you naught for your comfort, yea, naught for your desire.</p>
+      <blockquote><p>Blessed is he that expecteth nothing, for he shall not be disappointed.</p></blockquote></body></html>"""
+    b.add_item(ch); b.spine = [ch]; b.add_item(epub.EpubNcx()); b.add_item(epub.EpubNav())
+    epub.write_epub(str(tmp_path / "q.epub"), b)
+    paras = load_epub(str(tmp_path / "q.epub")).paragraphs
+    flags = {p.text[:10]: p.is_quote for p in paras}
+    assert flags["Some ordin"] is False and flags["I tell you"] is True and flags["Blessed is"] is True
+
+
+def test_person_mentions_flatten():
+    from influence_map.llm import _flatten
+    from influence_map.schema import ChunkResult
+
+    r = ChunkResult.model_validate({"mentions": [], "people": [{"name": "George Bernard Shaw", "paragraph": 3, "quote": "Mr. Shaw"}]})
+    ms = _flatten(r)
+    assert ms[0].kind == "person" and ms[0].creator == "George Bernard Shaw" and ms[0].paragraph == 3

@@ -25,7 +25,9 @@ WORK_WORDS = re.compile(
     re.I,
 )
 # “Two Capitalized Words” or 'Two Capitalized Words' inside quotes, or 3+ capitalized words in a row
-QUOTED_TITLE = re.compile(r"[\"“‘']([A-Z][\w'’-]+(?:\s+(?:[a-z]{1,3}\s+)?[A-Z][\w'’-]+){1,8})[\"”’']")
+QUOTED_TITLE = re.compile(r"[\"“‘']([A-Z][\w'’-]+(?:\s+(?:[a-z]{1,3}\s+)?[A-Z][\w'’-]+){1,8})[.,;:!?]?[\"”’']")
+# Old transcriptions (Gutenberg) render italics as SMALL CAPS: "the hero of GHOSTS", "called BEER AND BIBLE".
+CAPS_TITLE = re.compile(r"\b(?<![A-Z])[A-Z]{4,}(?:\s+(?:[A-Z]{2,}|of|and|the|a|an|in|to))*\b")
 CAP_RUN = re.compile(r"\b(?:[A-Z][\w'’-]+\s+(?:(?:of|the|and|a|an|in|on|to|for|de|du|la|le|des|del|von|der)\s+)?){2,}[A-Z][\w'’-]+\b")
 PROPER_NOUN = re.compile(r"\b[A-Z][a-z]{2,}\b")
 
@@ -43,6 +45,10 @@ def score(p: Paragraph) -> int:
         s += 3
     if QUOTED_TITLE.search(p.text):
         s += 3
+    if p.is_quote:
+        s += 3  # a set-off quotation or verse is almost always from some work
+    if CAPS_TITLE.search(p.text) and not p.text.isupper():
+        s += 2
     if CAP_RUN.search(p.text):
         s += 1
     if WORK_WORDS.search(p.text):
@@ -54,7 +60,7 @@ def score(p: Paragraph) -> int:
     if titles:
         s += 3  # a known title is enough on its own
     if names:
-        s += 2  # a known creator's name: enough with any other weak signal
+        s += 3  # a notable creator's name: the paragraph may quote or allude to them without a title
     return s
 
 

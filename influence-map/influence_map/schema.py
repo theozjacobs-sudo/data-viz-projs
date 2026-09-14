@@ -4,7 +4,7 @@ from typing import Literal, Optional
 
 from pydantic import BaseModel, Field
 
-Kind = Literal["book", "film", "artwork", "music", "play", "poem", "other"]
+Kind = Literal["book", "film", "artwork", "music", "play", "poem", "other", "person"]
 
 
 class Mention(BaseModel):
@@ -21,8 +21,17 @@ class Mention(BaseModel):
     )
 
 
+class Person(BaseModel):
+    """A creator (writer, artist, director, composer, philosopher) named without any specific work."""
+
+    name: str = Field(description="Full name as commonly known (George Bernard Shaw, not Mr. Shaw)")
+    paragraph: int
+    quote: str = Field(description="Shortest span (under 25 words) containing the name, verbatim")
+
+
 class ChunkResult(BaseModel):
     mentions: list[Mention]
+    people: list[Person] = Field(default_factory=list, description="Creators named in the passage with no specific work attached. Skip anyone already listed as a creator in mentions")
 
 
 class CanonicalWork(BaseModel):

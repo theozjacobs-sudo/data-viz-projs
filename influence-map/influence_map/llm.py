@@ -34,13 +34,15 @@ EXTRACT_SYSTEM = """You read passages from a book and list every other creative 
 
 Include: books, essays, poems, plays, films, TV series, paintings, sculptures, photographs, musical works, albums, operas. Include works that are quoted, discussed, named in passing, or clearly alluded to without a title (e.g. "the Danish prince's soliloquy" -> Hamlet). Include sacred and classical texts (the Iliad, Genesis) when they are referenced as works.
 
-Exclude: the book you are reading itself; periodicals, newspapers, and journals; publishers; characters; places; bare author names with no work attached; generic references ("a novel", "his poems"); mentions that are clearly in a footnote, citation, or bibliography entry.
+Exclude from mentions: the book you are reading itself; periodicals, newspapers, and journals; publishers; characters; places; generic references ("a novel", "his poems"); mentions that are clearly in a footnote, citation, or bibliography entry.
+
+Separately, under people, list creators (writers, poets, artists, directors, composers, philosophers) the passage names or discusses WITHOUT attaching a specific work, e.g. "Mr. Shaw's philosophy", "as Kipling would say". Do not list historical or political figures, scientists, or characters unless they are known as creators of works.
 
 For each mention give the standard title, the creator if stated or widely known, the kind, the ¶ index the mention sits in, and a short verbatim quote. Titles in the text may be italicised, quoted, or plain; normalise obvious variants (drop leading "the" only if that is the standard title). Do not invent works. If a paragraph mentions nothing, return no entries for it. Return an empty list if the passage mentions nothing."""
 
 CANON_SYSTEM = """You are given the book's own title and author, plus a list of raw work mentions extracted paragraph by paragraph from that book. Merge duplicates into canonical works.
 
-Rules: treat spelling variants, partial titles, translated titles, and "the X" / "X" as the same work when they clearly are. Fill in creator and year of first publication or release when widely known; leave null when genuinely uncertain. Never include the book itself. Keep every raw title string in raw_titles so mentions can be traced back. Prefer the creator's common name (George Eliot, not Mary Ann Evans)."""
+Rules: treat spelling variants, partial titles, translated titles, and "the X" / "X" as the same work when they clearly are. Entries of kind "person" are creators named without a work: merge name variants (Mr. Shaw, Shaw, Bernard Shaw) into one entry whose title and creator are both the full common name, and drop a person entry when a work by that person is also listed. Fill in creator and year of first publication or release when widely known; leave null when genuinely uncertain. Never include the book itself. Keep every raw title string in raw_titles so mentions can be traced back. Prefer the creator's common name (George Eliot, not Mary Ann Evans)."""
 
 
 @dataclass
@@ -115,6 +117,14 @@ def _output_format_schema() -> dict:
         return ChunkResult.model_json_schema()
 
 
+def _flatten(r: ChunkResult) -> list[Mention]:
+    """People named without a work ride along as kind='person' so the author graph can use them."""
+    out = list(r.mentions)
+    for p in r.people:
+        out.append(Mention(title=p.name, creator=p.name, kind="person", year=None, paragraph=p.paragraph, quote=p.quote, how="named"))
+    return out
+
+
 class ClaudeExtractor:
     def __init__(self, model: str = EXTRACT_MODEL, canon_model: str = CANON_MODEL, batch: bool = False):
         self.client = _client()
@@ -133,7 +143,7 @@ class ClaudeExtractor:
             resp = self.client.messages.parse(output_format=ChunkResult, **params)
             self.usage.add(self.model, resp.usage)
             if resp.parsed_output:
-                out.extend(resp.parsed_output.mentions)
+                out.extend(_flatten(resp.parsed_output))
             if progress:
                 progress(i + 1, len(chunks))
         return out
@@ -164,7 +174,7 @@ class ClaudeExtractor:
             self.usage.add(self.model, msg.usage)
             text = next((blk.text for blk in msg.content if blk.type == "text"), "")
             try:
-                out.extend(ChunkResult.model_validate_json(text).mentions)
+                out.extend(_flatten(ChunkResult.model_validate_json(text)))
             except Exception:
                 pass
         return out

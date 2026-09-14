@@ -17,8 +17,9 @@ from .llm import CANON_MODEL, EXTRACT_MODEL, PRICES
 from .pipeline import ingest
 
 STATIC = Path(__file__).resolve().parent.parent / "static"
-KIND_LABEL = {"book": "Books", "play": "Plays", "poem": "Poems", "film": "Film & TV", "artwork": "Art", "music": "Music", "other": "Other"}
-KIND_ORDER = ["book", "play", "poem", "film", "artwork", "music", "other"]
+KIND_LABEL = {"book": "Books", "play": "Plays", "poem": "Poems", "film": "Film & TV", "artwork": "Art", "music": "Music", "other": "Other",
+              "person": "People named without a specific work"}
+KIND_ORDER = ["book", "play", "poem", "film", "artwork", "music", "other", "person"]
 
 
 def e(s) -> str:
@@ -132,7 +133,7 @@ def make_app(db_path: str = "library.db", upload_dir: str = "uploads") -> FastAP
                 quotes = "".join(f"<li>¶{m['paragraph']} <span class='how'>{e(m['how'])}</span> “{e(m['quote'])}”</li>" for m in ms[:8])
                 more = f"<li class='muted'>…and {len(ms) - 8} more</li>" if len(ms) > 8 else ""
                 yr = f" <span class='muted'>({w['year']})</span>" if w["year"] else ""
-                who = f" <span class='creator'>{e(w['creator'])}</span>" if w["creator"] else ""
+                who = f" <span class='creator'>{e(w['creator'])}</span>" if w["creator"] and kind != "person" else ""
                 items.append(
                     f"<details><summary><a href='{e(link_for(w['title'], w['creator'], kind))}' target='_blank' rel='noopener'>{e(w['title'])}</a>{who}{yr}"
                     f"<span class='count'>{w['n']}×</span></summary><ul class='quotes'>{quotes}{more}</ul></details>"
