@@ -1,0 +1,43 @@
+# Publishes influence-map/library.db as a read-only website on GitHub Pages.
+# One-time setup: repo Settings -> Pages -> Source: "GitHub Actions".
+# After that, every push that changes influence-map/library.db rebuilds the site.
+name: influence-map pages
+on:
+  push:
+    paths:
+      - "influence-map/**"
+      - ".github/workflows/influence-map-pages.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: true
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r influence-map/requirements.txt
+      - name: Export static site
+        working-directory: influence-map
+        run: |
+          if [ ! -f library.db ]; then echo "no library.db committed yet; building an empty site"; fi
+          python -m influence_map export --db library.db --out site
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: influence-map/site
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

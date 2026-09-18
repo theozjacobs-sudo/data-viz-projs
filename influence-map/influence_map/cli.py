@@ -5,10 +5,12 @@
   python -m influence_map paragraphs BOOK.epub     # dump what would be sent, to sanity-check the filter
   python -m influence_map audit BOOK.epub          # spend a few cents to measure what the filter misses
   python -m influence_map serve [--db library.db] [--port 8000]
+  python -m influence_map export [--db library.db] [--out site]   # static read-only site for GitHub Pages
 """
 from __future__ import annotations
 
 import argparse
+import os
 import sys
 
 from . import db as dbm
@@ -32,6 +34,8 @@ def main(argv=None):
     au = sub.add_parser("audit", help="sample dropped paragraphs through the model to measure prefilter recall")
     au.add_argument("file"); au.add_argument("--sample", type=int, default=60); common(au)
     s = sub.add_parser("serve"); s.add_argument("--db", default="library.db"); s.add_argument("--port", type=int, default=8000); s.add_argument("--host", default="127.0.0.1")
+    s.add_argument("--password", default=os.environ.get("APP_PASSWORD", ""), help="require this password (HTTP basic auth) on every page")
+    x = sub.add_parser("export"); x.add_argument("--db", default="library.db"); x.add_argument("--out", default="site")
     a = ap.parse_args(argv)
 
     if a.cmd == "estimate":
@@ -62,7 +66,12 @@ def main(argv=None):
 
         from .app import make_app
 
-        uvicorn.run(make_app(a.db), host=a.host, port=a.port)
+        uvicorn.run(make_app(a.db, password=a.password or None), host=a.host, port=a.port)
+    elif a.cmd == "export":
+        from .export import export
+
+        files = export(a.db, a.out)
+        print(f"wrote {len(files)} pages to {a.out}/")
 
 
 if __name__ == "__main__":

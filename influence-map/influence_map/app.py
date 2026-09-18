@@ -4,6 +4,7 @@ from __future__ import annotations
 import html
 import json
 import os
+import re
 import threading
 from pathlib import Path
 
@@ -35,11 +36,38 @@ def page(title: str, body: str, extra_head: str = "") -> HTMLResponse:
     )
 
 
-def make_app(db_path: str = "library.db", upload_dir: str = "uploads") -> FastAPI:
+def make_app(db_path: str = "library.db", upload_dir: str = "uploads", readonly: bool = False,
+             password: str | None = None) -> FastAPI:
+    """readonly: no upload/delete UI (used for the static export). password: shared password that
+    guards every page with HTTP basic auth, for a hosted copy that friends use but strangers don't."""
     app = FastAPI(title="Influence Map")
     app.mount("/static", StaticFiles(directory=str(STATIC)), name="static")
-    os.makedirs(upload_dir, exist_ok=True)
+    if not readonly:
+        os.makedirs(upload_dir, exist_ok=True)
     lock = threading.Lock()
+
+    if password:
+        import base64
+        import secrets
+
+        from starlette.middleware.base import BaseHTTPMiddleware
+        from starlette.responses import Response
+
+        class Auth(BaseHTTPMiddleware):
+            async def dispatch(self, request, call_next):
+                h = request.headers.get("authorization", "")
+                ok = False
+                if h.startswith("Basic "):
+                    try:
+                        _, _, pw = base64.b64decode(h[6:]).decode().partition(":")
+                        ok = secrets.compare_digest(pw, password)
+                    except Exception:
+                        ok = False
+                if not ok:
+                    return Response("Password required", 401, headers={"WWW-Authenticate": 'Basic realm="Influence Map"'})
+                return await call_next(request)
+
+        app.add_middleware(Auth)
 
     def con():
         return dbm.connect(db_path)
@@ -80,7 +108,10 @@ def make_app(db_path: str = "library.db", upload_dir: str = "uploads") -> FastAP
             total = sum((r["cost_usd"] or 0) for r in rows)
             lst = (f"<table><thead><tr><th>Title</th><th>Author</th><th class='num'>Words</th><th class='num'>¶ sent</th><th class='num'>Works cited</th><th class='num'>Cost</th><th></th></tr></thead>"
                    f"<tbody>{''.join(trs)}</tbody><tfoot><tr><td colspan='5'>{len(rows)} books</td><td class='num'>${total:.2f}</td><td></td></tr></tfoot></table>")
-        refresh = "<meta http-equiv='refresh' content='5'>" if running else ""
+        refresh = "<meta http-equiv='refresh' content='5'>" if running and not readonly else ""
+        if readonly:
+            form = ""
+            lst = re.sub(r"<td><form method='post'.*?</form></td>", "<td></td>", lst)
         return page("Library", form + f"<section class='card'><h2>Library</h2>{lst}</section>", refresh)
 
     @app.post("/upload")
@@ -197,4 +228,4 @@ def make_app(db_path: str = "library.db", upload_dir: str = "uploads") -> FastAP
     return app
 
 
-app = make_app(os.environ.get("INFLUENCE_DB", "library.db"))
+app = make_app(os.environ.get("INFLUENCE_DB", "library.db"), password=os.environ.get("APP_PASSWORD") or None)

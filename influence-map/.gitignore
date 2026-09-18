@@ -1,6 +1,8 @@
-*.db
 *.db-journal
+# library.db is intentionally committable: pushing it publishes your results to GitHub Pages.
+# Keep the EPUBs themselves out of git.
 uploads/
 __pycache__/
 .env
 .pytest_cache/
+site/

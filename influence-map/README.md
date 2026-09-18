@@ -27,6 +27,41 @@ Pages: `/` library and upload, `/book/{id}` everything a book cites with quotes 
 links, `/graph` author-to-author influence graph, `/reading` what to read next. JSON at
 `/api/books`, `/api/book/{id}`, `/api/graph`, `/api/reading`.
 
+## Sharing it with other people
+
+There are two different things you might want to share.
+
+**Your results, as a website (GitHub Pages).** Every page of the app except upload and delete can
+be exported as plain HTML:
+
+```bash
+python -m influence_map export --out site     # writes site/index.html, graph.html, reading.html, book-N.html
+```
+
+The repo has a GitHub Actions workflow (`.github/workflows/influence-map-pages.yml`) that does this
+automatically from a committed `library.db`. One-time setup: in the GitHub repo go to Settings,
+Pages, and set Source to "GitHub Actions". Then whenever you have scanned new books:
+
+```bash
+git add library.db && git commit -m "Add books" && git push
+```
+
+A minute later the site is live at `https://<your-user>.github.io/data-viz-projs/`. The EPUBs
+never leave your machine; only titles, creators, quotes and counts are published. Note that the
+short quotes on the book pages are excerpts from the books you scanned.
+
+**The tool itself, so friends can upload their own books.** That needs a server holding your API
+key, and anyone who can reach it spends your credit. The app supports a shared password:
+
+```bash
+python -m influence_map serve --password something-you-tell-friends   # or APP_PASSWORD=...
+```
+
+The `Dockerfile` runs it on any container host. On Railway or Fly.io: create a service from this
+repo with root directory `influence-map`, set `ANTHROPIC_API_KEY` and `APP_PASSWORD`, and attach a
+volume at `/data` so the library survives restarts. Expect roughly $0.25 per book scanned on the
+defaults, so a spending limit on the API key is worth setting.
+
 ## How it keeps the cost down
 
 1. **Strip notes first.** `epub:type="footnote"`, `<aside>`, note classes, endnote sections,
@@ -122,7 +157,9 @@ influence_map/schema.py      Pydantic output schemas
 influence_map/db.py          SQLite, work merging, graph and recommendation queries
 influence_map/pipeline.py    ingest one file end to end
 influence_map/app.py         FastAPI pages and JSON API
-influence_map/cli.py         estimate / ingest / paragraphs / audit / serve
+influence_map/cli.py         estimate / ingest / paragraphs / audit / serve / export
+influence_map/export.py      static read-only site for GitHub Pages
+Dockerfile                   hosted copy of the full app
 static/                      stylesheet, D3 graph
 tests/                       offline tests (FAKE_LLM=1)
 ```

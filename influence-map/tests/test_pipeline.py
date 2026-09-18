@@ -157,3 +157,24 @@ def test_person_mentions_flatten():
     r = ChunkResult.model_validate({"mentions": [], "people": [{"name": "George Bernard Shaw", "paragraph": 3, "quote": "Mr. Shaw"}]})
     ms = _flatten(r)
     assert ms[0].kind == "person" and ms[0].creator == "George Bernard Shaw" and ms[0].paragraph == 3
+
+
+def test_export_and_password(tmp_path, book_path):
+    from fastapi.testclient import TestClient
+
+    from influence_map.app import make_app
+    from influence_map.export import export
+
+    con = dbm.connect(str(tmp_path / "e.db"))
+    ingest(con, book_path, log=lambda *a: None)
+    files = export(str(tmp_path / "e.db"), str(tmp_path / "site"))
+    assert "index.html" in files and "book-1.html" in files
+    index = (tmp_path / "site" / "index.html").read_text()
+    assert "href='book-1.html'" in index and "enctype='multipart" not in index and "action='/book" not in index
+    assert "api/graph.json" in (tmp_path / "site" / "static" / "graph.js").read_text()
+    assert (tmp_path / "site" / "api" / "graph.json").exists()
+
+    guarded = TestClient(make_app(str(tmp_path / "e.db"), str(tmp_path / "up"), password="hunter2"))
+    assert guarded.get("/").status_code == 401
+    assert guarded.get("/", auth=("anyone", "hunter2")).status_code == 200
+    assert guarded.get("/", auth=("anyone", "wrong")).status_code == 401
