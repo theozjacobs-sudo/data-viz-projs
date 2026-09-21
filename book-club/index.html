@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#2F6B52">
+  <title>Book Club Ballot</title>
+  <meta name="description" content="Everyone submits two books, everyone else rates them, the club keeps the stats.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,400..700,50&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%232F6B52'/%3E%3Crect x='8' y='7' width='5' height='18' fill='%23FAF8F3'/%3E%3Crect x='15' y='7' width='5' height='18' fill='%23C9A227'/%3E%3Crect x='22' y='9' width='4' height='16' fill='%23FAF8F3' transform='rotate(8 24 17)'/%3E%3C/svg%3E">
+</head>
+<body>
+  <div id="banner" class="banner" hidden></div>
+
+  <header class="top">
+    <div class="wrap top-row">
+      <h1 class="club-name" id="clubName">Book Club</h1>
+      <button class="chip me-chip" id="meChip" type="button" aria-haspopup="dialog">
+        <span class="chip-label">Voting as</span>
+        <span class="chip-value" id="meName">…</span>
+      </button>
+    </div>
+    <nav class="wrap tabs" aria-label="Sections">
+      <button class="tab is-active" data-view="now" type="button" id="tabNow">This round</button>
+      <button class="tab" data-view="shelf" type="button" id="tabShelf">Shelf</button>
+      <button class="tab" data-view="stats" type="button" id="tabStats">Stats</button>
+    </nav>
+  </header>
+
+  <main class="wrap">
+    <section id="view-now" class="view"></section>
+    <section id="view-shelf" class="view" hidden></section>
+    <section id="view-stats" class="view" hidden></section>
+  </main>
+
+  <footer class="wrap foot">
+    <span id="footStatus">Loading…</span>
+  </footer>
+
+  <!-- Who are you -->
+  <dialog id="dlgMe" class="dlg">
+    <form method="dialog" class="dlg-body">
+      <h2 class="dlg-title">Who's voting?</h2>
+      <p class="dlg-hint">Pick your name. It's remembered on this device.</p>
+      <div id="memberList" class="member-list"></div>
+      <div class="field-row">
+        <input id="newMemberName" class="input" type="text" placeholder="Add your name" autocomplete="off" maxlength="40">
+        <button class="btn" id="btnAddMember" type="button">Add</button>
+      </div>
+      <div class="dlg-actions">
+        <button class="btn btn-ghost" value="cancel" id="btnMeCancel" type="submit">Close</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Search / submit a book -->
+  <dialog id="dlgSearch" class="dlg">
+    <div class="dlg-body">
+      <h2 class="dlg-title">Submit a book</h2>
+      <p class="dlg-hint">Type a title or author. We look it up on Open Library and pull the real cover.</p>
+      <input id="searchInput" class="input input-lg" type="search" placeholder="e.g. The Overstory" autocomplete="off" autofocus>
+      <div id="searchResults" class="results" aria-live="polite"></div>
+      <details class="manual">
+        <summary>Can't find it? Add it by hand</summary>
+        <div class="field-col">
+          <input id="manualTitle" class="input" type="text" placeholder="Title" maxlength="200">
+          <input id="manualAuthor" class="input" type="text" placeholder="Author" maxlength="120">
+          <button class="btn" id="btnManualAdd" type="button">Add this book</button>
+        </div>
+      </details>
+      <div class="dlg-actions">
+        <button class="btn btn-ghost" id="btnSearchClose" type="button">Cancel</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- New round -->
+  <dialog id="dlgRound" class="dlg">
+    <form class="dlg-body" id="formRound">
+      <h2 class="dlg-title">Start a new round</h2>
+      <label class="label" for="roundName">Name</label>
+      <input id="roundName" class="input" type="text" maxlength="80" required>
+      <label class="label" for="roundMode">How do we vote?</label>
+      <div class="seg" role="radiogroup" aria-label="Vote mode">
+        <label class="seg-opt"><input type="radio" name="mode" value="scale" checked><span>Excitement, 1 to 10</span></label>
+        <label class="seg-opt"><input type="radio" name="mode" value="yesno"><span>Yes / No</span></label>
+      </div>
+      <label class="label" for="roundPer">Books per person</label>
+      <input id="roundPer" class="input input-sm" type="number" min="1" max="5" value="2">
+      <div class="dlg-actions">
+        <button class="btn btn-ghost" type="button" id="btnRoundCancel">Cancel</button>
+        <button class="btn btn-primary" type="submit">Open for submissions</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Club settings -->
+  <dialog id="dlgClub" class="dlg">
+    <form class="dlg-body" id="formClub">
+      <h2 class="dlg-title">Club settings</h2>
+      <label class="label" for="clubNameInput">Club name</label>
+      <input id="clubNameInput" class="input" type="text" maxlength="60" required>
+      <p class="dlg-hint">Members are managed from the "Voting as" menu at the top.</p>
+      <div class="dlg-actions">
+        <button class="btn btn-ghost" type="button" id="btnClubCancel">Cancel</button>
+        <button class="btn btn-primary" type="submit">Save</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
