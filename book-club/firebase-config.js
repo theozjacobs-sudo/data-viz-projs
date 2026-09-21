@@ -1,15 +1,14 @@
-// Paste your Firebase web app config here (Firebase console → Project settings →
-// Your apps → SDK setup and configuration → Config). Leave the placeholders and the
-// app runs in demo mode, storing data only in this browser.
-//
-// This config is not a secret: it identifies your project, and access is
-// controlled by the Firestore rules in firestore.rules.
+// Firebase web app config (Firebase console → Project settings → Your apps).
+// This is not a secret: it identifies the project, and access is controlled by
+// the Firestore rules in firestore.rules. If the values are ever replaced with
+// PASTE_ME placeholders, the app falls back to a local demo mode.
 
 export const firebaseConfig = {
-  apiKey: "PASTE_ME",
-  authDomain: "PASTE_ME.firebaseapp.com",
-  projectId: "PASTE_ME",
-  storageBucket: "PASTE_ME.appspot.com",
-  messagingSenderId: "PASTE_ME",
-  appId: "PASTE_ME",
+  apiKey: "AIzaSyAB7sDx8ENwy5rGOJ_oWZRU1pYCDvsnf3w",
+  authDomain: "book-club-4b378.firebaseapp.com",
+  projectId: "book-club-4b378",
+  storageBucket: "book-club-4b378.firebasestorage.app",
+  messagingSenderId: "417682911224",
+  appId: "1:417682911224:web:ef9647fb8b7b998006f00d",
+  measurementId: "G-32ERYEXDV0",
 };
