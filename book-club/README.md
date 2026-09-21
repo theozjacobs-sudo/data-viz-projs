@@ -5,6 +5,7 @@ A small web app for picking book club books without settling for the lowest comm
 - Everyone submits two books (typed in, looked up on Open Library, real cover pulled).
 - Everyone rates everyone else's books: excitement on a 1–10 slider, or a plain yes/no, chosen per round.
 - Submissions are anonymous until the results are revealed (per-round setting, on by default), so people vote on the book, not the friend.
+- Already read a book someone submitted? Tap "Already read it" and you sit that one out; it doesn't drag the average.
 - Submitters rate their own book too, but that only breaks ties.
 - Reveal the results: ranked list, most and least exciting, most divisive. Tap books to mark the ones you'll actually read.
 - The Shelf keeps every round and every book ever put forward. Stats tracks the club over time, including who has the best taste and who is the softest grader.

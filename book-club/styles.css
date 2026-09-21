@@ -249,6 +249,7 @@ main { padding-block: 18px 8px; }
 .yesno { display: flex; gap: 8px; }
 .yesno button { flex: 1; }
 .yesno .is-on-yes { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.is-on-read { background: var(--surface-2); border-color: var(--line-strong); color: var(--ink-2); font-weight: 600; }
 .yesno .is-on-no { background: var(--no-soft); border-color: var(--no); color: var(--no); font-weight: 600; }
 
 /* Score readout on a book */

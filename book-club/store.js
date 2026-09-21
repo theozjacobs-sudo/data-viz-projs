@@ -9,7 +9,7 @@
 //   onVotes(cb)    / setVote(id, obj)
 // Callbacks receive arrays of {id, ...data} (settings receives one object or null).
 
-import { firebaseConfig } from "./firebase-config.js";
+import { firebaseConfig } from "./firebase-config.js?v=5";
 
 export const DEFAULT_SETTINGS = { name: "Book Club", members: [], booksPerMember: 2 };
 
@@ -69,13 +69,18 @@ export class FirestoreStore {
   saveSettings(patch) {
     return this.fs.setDoc(this.fs.doc(this.db, "settings", "club"), { ...patch, updatedAt: Date.now() }, { merge: true });
   }
-  /** Atomic append, safe when several people add their names at the same moment. */
+  /** Append inside a transaction: never rewrites the list, safe when several people sign up at once. */
   addMember(member) {
     const ref = this.fs.doc(this.db, "settings", "club");
-    return this.fs.setDoc(ref, { name: DEFAULT_SETTINGS.name, members: this.fs.arrayUnion(member), updatedAt: Date.now() }, { mergeFields: ["members", "updatedAt"] })
-      .catch(() => this.fs.setDoc(ref, { ...DEFAULT_SETTINGS, members: [member], updatedAt: Date.now() }, { merge: true }));
+    return this.fs.runTransaction(this.db, async (tx) => {
+      const snap = await tx.get(ref);
+      if (!snap.exists()) {
+        tx.set(ref, { ...DEFAULT_SETTINGS, members: [member], updatedAt: Date.now() });
+      } else if (!(snap.data().members || []).some((m) => m.id === member.id)) {
+        tx.update(ref, { members: this.fs.arrayUnion(member), updatedAt: Date.now() });
+      }
+    });
   }
-
   removeMember(member) {
     return this.fs.updateDoc(this.fs.doc(this.db, "settings", "club"), { members: this.fs.arrayRemove(member), updatedAt: Date.now() });
   }

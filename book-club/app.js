@@ -1,5 +1,5 @@
-import { createStore, DEFAULT_SETTINGS } from "./store.js";
-import { searchBooks, manualBook } from "./lookup.js";
+import { createStore, DEFAULT_SETTINGS } from "./store.js?v=5";
+import { searchBooks, manualBook } from "./lookup.js?v=5";
 
 /* ------------------------------------------------------------------ */
 /* State                                                               */
@@ -52,8 +52,10 @@ const submitterLine = (book, round) => {
 /** Per-book tally. Submitter's own score is excluded from the mean and kept as a tiebreaker. */
 function tally(book, round, votes) {
   const scores = [];
+  let read = 0;
   for (const v of votes) {
     if (v.voterId === book.submittedBy) continue;
+    if (v.read?.[book.id]) { read++; continue; }   // already read it: sits this one out
     const s = v.scores?.[book.id];
     if (typeof s === "number") scores.push(s);
   }
@@ -61,7 +63,7 @@ function tally(book, round, votes) {
   const mean = n ? scores.reduce((a, b) => a + b, 0) / n : null;
   const sd = n > 1 ? Math.sqrt(scores.reduce((a, b) => a + (b - mean) ** 2, 0) / n) : 0;
   const yes = round.mode === "yesno" ? scores.filter((s) => s === 1).length : null;
-  return { scores, n, mean, sd, yes, own: typeof book.ownScore === "number" ? book.ownScore : null };
+  return { scores, n, mean, sd, yes, read, own: typeof book.ownScore === "number" ? book.ownScore : null };
 }
 
 function rankBooks(round) {
@@ -243,9 +245,16 @@ function renderMemberList() {
 async function addMemberFromDialog() {
   const name = $("#newMemberName").value.trim();
   if (!name) return;
+  if (["anonymous", "anon", "someone", "you", "me"].includes(name.toLowerCase())) {
+    return toast("Use your real name. Submissions are already hidden until the reveal.");
+  }
   const members = [...(state.settings?.members || [])];
   const existing = members.find((m) => m.name.toLowerCase() === name.toLowerCase());
-  let id = existing?.id;
+  let id = null;
+  if (existing) {
+    if (confirm(`“${existing.name}” is already in the club. Is that you?`)) id = existing.id;
+    else return toast("Add an initial or a nickname so we can tell you apart.");
+  }
   if (!id) {
     const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 20);
     // If books were submitted under this name's id but the member entry is gone, adopt that id
@@ -341,7 +350,7 @@ function renderNow() {
     const need = books.filter((b) => b.submittedBy !== m.id);
     if (!need.length) return false;
     const v = votes.find((x) => x.voterId === m.id);
-    return v && need.every((b) => typeof v.scores?.[b.id] === "number");
+    return v && need.every((b) => typeof v.scores?.[b.id] === "number" || v.read?.[b.id]);
   });
   const submittersDone = new Set(books.map((b) => b.submittedBy)).size;
 
@@ -490,18 +499,32 @@ function voteControl(book, round, votes) {
   const my = votes.find((v) => v.voterId === state.meId);
   const cur = my?.scores?.[book.id];
   const has = typeof cur === "number";
+  const alreadyRead = !!my?.read?.[book.id];
   const box = el("div", { class: "vote" });
 
-  const save = async (value) => {
+  const write = async (patch) => {
     if (!requireMe()) return;
     const id = `${round.id}_${state.meId}`;
     const existing = state.votes.find((v) => v.id === id);
-    const scores = { ...(existing?.scores || {}), [book.id]: value };
-    await state.store.setVote(id, { roundId: round.id, voterId: state.meId, scores, updatedAt: Date.now() });
+    await state.store.setVote(id, {
+      roundId: round.id, voterId: state.meId,
+      scores: { ...(existing?.scores || {}), ...(patch.scores || {}) },
+      read: { ...(existing?.read || {}), ...(patch.read || {}) },
+      updatedAt: Date.now(),
+    });
   };
+  const save = (value) => write({ scores: { [book.id]: value }, read: { [book.id]: false } });
+  const readBtn = el("button", {
+    type: "button", class: `btn btn-sm ${alreadyRead ? "is-on-read" : "btn-ghost"}`,
+    onclick: () => write({ read: { [book.id]: !alreadyRead } }),
+  }, alreadyRead ? "✓ Already read it" : "Already read it");
 
+  if (alreadyRead) {
+    box.append(el("div", { class: "vote-head" }, el("span", {}, "You've read this one, so you sit it out."), readBtn));
+    return box;
+  }
   if (round.mode === "yesno") {
-    box.append(yesNoButtons(has ? cur : null, save));
+    box.append(yesNoButtons(has ? cur : null, save), el("div", { class: "row", style: "justify-content:flex-end" }, readBtn));
     return box;
   }
   const val = has ? cur : 5;
@@ -514,7 +537,9 @@ function voteControl(book, round, votes) {
     head.lastChild.textContent = slider.value;
   });
   slider.addEventListener("change", () => save(Number(slider.value)));
-  box.append(head, slider, el("div", { class: "slider-ticks" }, ["1", "", "", "", "5", "", "", "", "", "10"].map((t) => el("span", {}, t))));
+  box.append(head, slider,
+    el("div", { class: "slider-ticks" }, ["1", "", "", "", "5", "", "", "", "", "10"].map((t) => el("span", {}, t))),
+    el("div", { class: "row", style: "justify-content:flex-end" }, readBtn));
   return box;
 }
 
@@ -528,7 +553,7 @@ function resultReadout(book, round, t) {
   const box = el("div", { class: "score" },
     el("div", {},
       el("div", { class: "score-num" }, fmtScore(t.mean, round.mode)),
-      el("div", { class: "score-sub" }, t.n ? `${fmtUnit(round.mode)} · ${t.n} vote${t.n === 1 ? "" : "s"}` : "no votes")),
+      el("div", { class: "score-sub" }, [t.n ? `${fmtUnit(round.mode)} · ${t.n} vote${t.n === 1 ? "" : "s"}` : "no votes", t.read ? `${t.read} already read it` : null].filter(Boolean).join(" · "))),
     el("div", { class: "meter" }, el("i", { style: `width:${meterPct(t.mean, round.mode)}%` })));
   const wrap = el("div", { class: "stack", style: "gap:4px" }, box);
   if (round.mode === "yesno" && t.n) {
