@@ -41,6 +41,13 @@ const memberName = (id) => state.settings?.members.find((m) => m.id === id)?.nam
 const roundBooks = (roundId) => state.books.filter((b) => b.roundId === roundId);
 const roundVotes = (roundId) => state.votes.filter((v) => v.roundId === roundId);
 const currentRound = () => state.rounds.find((r) => r.status !== "decided") || state.rounds[0] || null;
+/** Rounds hide who submitted what until results are revealed, unless the round opted out. */
+const isAnonymous = (round) => round.anonymous !== false && round.status !== "decided";
+const submitterLine = (book, round) => {
+  if (book.submittedBy === state.meId) return el("div", { class: "by" }, "Submitted by ", el("b", {}, "you"));
+  if (isAnonymous(round)) return el("div", { class: "by" }, "Submitted anonymously");
+  return el("div", { class: "by" }, "Submitted by ", el("b", {}, memberName(book.submittedBy)));
+};
 
 /** Per-book tally. Submitter's own score is excluded from the mean and kept as a tiebreaker. */
 function tally(book, round, votes) {
@@ -178,8 +185,9 @@ function wireChrome() {
     const name = $("#roundName").value.trim();
     const mode = $("#formRound").mode.value;
     const per = Math.max(1, Math.min(5, parseInt($("#roundPer").value, 10) || 2));
+    const anonymous = $("#roundAnon").checked;
     $("#dlgRound").close();
-    await state.store.addRound({ name, mode, booksPerMember: per, status: "submitting", createdAt: Date.now(), winnerIds: [] });
+    await state.store.addRound({ name, mode, booksPerMember: per, anonymous, status: "submitting", createdAt: Date.now(), winnerIds: [] });
     state.view = "now"; render();
     toast("Round open for submissions");
   });
@@ -305,7 +313,8 @@ function renderNow() {
     el("div", { class: "round-meta" },
       el("span", {}, round.mode === "yesno" ? "Yes / No vote" : "Excitement, 1–10"),
       el("span", {}, `${per} book${per > 1 ? "s" : ""} each`),
-      el("span", { class: "num" }, `${books.length} submitted`)),
+      el("span", { class: "num" }, `${books.length} submitted`),
+      isAnonymous(round) ? el("span", {}, "Anonymous until the reveal") : null),
   );
 
   if (round.status === "submitting") {
@@ -400,7 +409,7 @@ function bookCard(book, round, votes, opts = {}) {
     el("h4", { class: "book-title" }, book.title),
     el("div", { class: "book-author" }, book.author),
     bookFacts(book),
-    el("div", { class: "by" }, "Submitted by ", el("b", {}, memberName(book.submittedBy))),
+    submitterLine(book, round),
   );
 
   if (opts.mine) {
