@@ -3,7 +3,7 @@
 //   - LocalStore: this browser only, for demo mode and offline fallback
 //
 // Surface:
-//   onSettings(cb) / saveSettings(patch) / addMember({id, name})
+//   onSettings(cb) / saveSettings(patch) / addMember({id, name}) / removeMember({id, name})
 //   onRounds(cb)   / addRound(obj) -> id / updateRound(id, patch) / deleteRound(id)
 //   onBooks(cb)    / addBook(obj)  -> id / updateBook(id, patch)  / deleteBook(id)
 //   onVotes(cb)    / setVote(id, obj)
@@ -76,6 +76,10 @@ export class FirestoreStore {
       .catch(() => this.fs.setDoc(ref, { ...DEFAULT_SETTINGS, members: [member], updatedAt: Date.now() }, { merge: true }));
   }
 
+  removeMember(member) {
+    return this.fs.updateDoc(this.fs.doc(this.db, "settings", "club"), { members: this.fs.arrayRemove(member), updatedAt: Date.now() });
+  }
+
   onRounds(cb) { return this._sub("rounds", cb); }
   async addRound(obj) { const ref = await this.fs.addDoc(this._col("rounds"), obj); return ref.id; }
   updateRound(id, patch) { return this.fs.updateDoc(this.fs.doc(this.db, "rounds", id), patch); }
@@ -133,6 +137,12 @@ export class LocalStore {
     const cur = this.data.settings || { ...DEFAULT_SETTINGS };
     if (!(cur.members || []).some((m) => m.id === member.id)) cur.members = [...(cur.members || []), member];
     this.data.settings = { ...cur, updatedAt: Date.now() }; this._save(); this._emit("settings");
+  }
+
+  async removeMember(member) {
+    const cur = this.data.settings || { ...DEFAULT_SETTINGS };
+    this.data.settings = { ...cur, members: (cur.members || []).filter((m) => m.id !== member.id), updatedAt: Date.now() };
+    this._save(); this._emit("settings");
   }
 
   onRounds(cb) { return this._on("rounds", cb); }

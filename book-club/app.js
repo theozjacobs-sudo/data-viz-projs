@@ -114,6 +114,7 @@ async function boot() {
     // Never write defaults back: a first snapshot can arrive empty before the server answers.
     state.settings = s || { ...DEFAULT_SETTINGS };
     render();
+    if (s) healMembership(s);
   });
   store.onRounds((rows, err) => {
     if (err) return footer("Can't read rounds. Check the Firestore rules.");
@@ -198,8 +199,8 @@ function wireChrome() {
     e.preventDefault();
     const name = $("#clubNameInput").value.trim() || "Book Club";
     $("#dlgClub").close();
-    await state.store.saveSettings({ name, members: state.settings.members || [] });
-    toast("Saved");
+    try { await state.store.saveSettings({ name }); toast("Saved"); }
+    catch (err) { console.error(err); toast("Couldn't save. Add a member first, then rename."); }
   });
 
   for (const d of document.querySelectorAll("dialog")) {
@@ -217,10 +218,24 @@ function renderMemberList() {
   const box = $("#memberList");
   const members = state.settings?.members || [];
   box.replaceChildren(
-    ...(members.length ? members.map((m) => el("button", {
-      type: "button", class: `btn member-btn ${m.id === state.meId ? "is-me" : ""}`,
-      onclick: () => { setMe(m.id); $("#dlgMe").close(); },
-    }, el("span", {}, m.name), m.id === state.meId ? el("span", { class: "small muted" }, "that's you") : null))
+    ...(members.length ? members.map((m) => {
+      const hasBooks = state.books.some((b) => b.submittedBy === m.id);
+      const row = el("button", {
+        type: "button", class: `btn member-btn ${m.id === state.meId ? "is-me" : ""}`,
+        onclick: () => { setMe(m.id); $("#dlgMe").close(); },
+      }, el("span", {}, m.name), m.id === state.meId ? el("span", { class: "small muted" }, "that's you") : null);
+      if (!hasBooks && m.id !== state.meId) {
+        row.append(el("span", {
+          class: "small muted member-remove", role: "button", tabindex: "0", title: "Remove this name",
+          onclick: async (e) => {
+            e.stopPropagation();
+            if (!confirm(`Remove “${m.name}” from the club? (They have no books submitted.)`)) return;
+            try { await state.store.removeMember(m); renderMemberList(); } catch (err) { console.error(err); toast("Couldn't remove"); }
+          },
+        }, "remove"));
+      }
+      return row;
+    })
       : [el("div", { class: "muted small" }, "No members yet. Add your name below.")])
   );
 }
@@ -247,8 +262,29 @@ async function addMemberFromDialog() {
 
 function setMe(id) {
   state.meId = id;
-  try { localStorage.setItem("bookclub.me", id); } catch { /* ignore */ }
+  try {
+    localStorage.setItem("bookclub.me", id);
+    const name = state.settings?.members.find((m) => m.id === id)?.name;
+    if (name) localStorage.setItem("bookclub.meName", name);
+  } catch { /* ignore */ }
   render();
+}
+
+/** If this device's member entry has vanished from the club list, put it back. */
+let healing = false;
+async function healMembership(settings) {
+  if (healing || !state.meId || !settings || settings.members.some((m) => m.id === state.meId)) return;
+  let name = null;
+  try { name = localStorage.getItem("bookclub.meName"); } catch { /* ignore */ }
+  if (!name) {
+    const slug = (state.meId.match(/^m_(.+)-[a-z0-9]{4}$/) || [])[1];
+    if (slug) name = slug.split("-").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
+  }
+  if (!name) return;
+  healing = true;
+  try { await state.store.addMember({ id: state.meId, name }); }
+  catch (err) { console.error("could not restore membership", err); }
+  finally { healing = false; }
 }
 
 function requireMe() {
