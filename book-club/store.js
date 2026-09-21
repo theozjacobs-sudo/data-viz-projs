@@ -3,7 +3,7 @@
 //   - LocalStore: this browser only, for demo mode and offline fallback
 //
 // Surface:
-//   onSettings(cb) / saveSettings(obj)
+//   onSettings(cb) / saveSettings(patch) / addMember({id, name})
 //   onRounds(cb)   / addRound(obj) -> id / updateRound(id, patch) / deleteRound(id)
 //   onBooks(cb)    / addBook(obj)  -> id / updateBook(id, patch)  / deleteBook(id)
 //   onVotes(cb)    / setVote(id, obj)
@@ -65,8 +65,15 @@ export class FirestoreStore {
       cb(snap.exists() ? { ...DEFAULT_SETTINGS, ...snap.data() } : null);
     }, (err) => cb(null, err));
   }
-  saveSettings(obj) {
-    return this.fs.setDoc(this.fs.doc(this.db, "settings", "club"), { ...obj, updatedAt: Date.now() });
+  /** Merge-write: only the fields in `patch` change, so two devices saving at once don't clobber each other. */
+  saveSettings(patch) {
+    return this.fs.setDoc(this.fs.doc(this.db, "settings", "club"), { ...patch, updatedAt: Date.now() }, { merge: true });
+  }
+  /** Atomic append, safe when several people add their names at the same moment. */
+  addMember(member) {
+    const ref = this.fs.doc(this.db, "settings", "club");
+    return this.fs.setDoc(ref, { name: DEFAULT_SETTINGS.name, members: this.fs.arrayUnion(member), updatedAt: Date.now() }, { mergeFields: ["members", "updatedAt"] })
+      .catch(() => this.fs.setDoc(ref, { ...DEFAULT_SETTINGS, members: [member], updatedAt: Date.now() }, { merge: true }));
   }
 
   onRounds(cb) { return this._sub("rounds", cb); }
@@ -121,7 +128,12 @@ export class LocalStore {
   reset() { this.data = seedDemo(); this._save(); for (const k of Object.keys(this.listeners)) this._emit(k); }
 
   onSettings(cb) { return this._on("settings", cb); }
-  async saveSettings(obj) { this.data.settings = { ...obj, updatedAt: Date.now() }; this._save(); this._emit("settings"); }
+  async saveSettings(patch) { this.data.settings = { ...DEFAULT_SETTINGS, ...(this.data.settings || {}), ...patch, updatedAt: Date.now() }; this._save(); this._emit("settings"); }
+  async addMember(member) {
+    const cur = this.data.settings || { ...DEFAULT_SETTINGS };
+    if (!(cur.members || []).some((m) => m.id === member.id)) cur.members = [...(cur.members || []), member];
+    this.data.settings = { ...cur, updatedAt: Date.now() }; this._save(); this._emit("settings");
+  }
 
   onRounds(cb) { return this._on("rounds", cb); }
   async addRound(obj) { const id = this._id(); this.data.rounds[id] = { ...obj }; this._save(); this._emit("rounds"); return id; }

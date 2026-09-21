@@ -111,8 +111,8 @@ async function boot() {
 
   store.onSettings((s, err) => {
     if (err) return footer("Can't read the club settings. Check the Firestore rules.");
+    // Never write defaults back: a first snapshot can arrive empty before the server answers.
     state.settings = s || { ...DEFAULT_SETTINGS };
-    if (!s && store.kind === "firestore") store.saveSettings({ ...DEFAULT_SETTINGS }).catch(() => {});
     render();
   });
   store.onRounds((rows, err) => {
@@ -198,7 +198,7 @@ function wireChrome() {
     e.preventDefault();
     const name = $("#clubNameInput").value.trim() || "Book Club";
     $("#dlgClub").close();
-    await state.store.saveSettings({ ...state.settings, name });
+    await state.store.saveSettings({ name, members: state.settings.members || [] });
     toast("Saved");
   });
 
@@ -232,9 +232,14 @@ async function addMemberFromDialog() {
   const existing = members.find((m) => m.name.toLowerCase() === name.toLowerCase());
   let id = existing?.id;
   if (!id) {
-    id = "m_" + name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 20) + "-" + Math.random().toString(36).slice(2, 6);
-    members.push({ id, name });
-    await state.store.saveSettings({ ...(state.settings || DEFAULT_SETTINGS), members });
+    const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 20);
+    // If books were submitted under this name's id but the member entry is gone, adopt that id
+    // so those books are theirs again.
+    const known = new Set(members.map((m) => m.id));
+    const orphan = state.books.map((b) => b.submittedBy).find((sid) => sid && !known.has(sid) && sid.startsWith(`m_${slug}-`));
+    id = orphan || `m_${slug}-${Math.random().toString(36).slice(2, 6)}`;
+    try { await state.store.addMember({ id, name }); }
+    catch (err) { console.error(err); return toast("Couldn't save your name. Try again."); }
   }
   setMe(id);
   $("#dlgMe").close();
