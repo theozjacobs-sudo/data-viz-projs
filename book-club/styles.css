@@ -329,3 +329,10 @@ tr:last-child td { border-bottom: 0; }
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; animation: none !important; }
 }
+
+/* Already-read books: off the ballot for everyone */
+.book.is-retired { opacity: .72; background: var(--surface-2); }
+.book.is-retired .book-title { text-decoration: line-through; text-decoration-color: var(--line-strong); }
+.retired-line { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 6px; }
+.tag-read { font-size: .72rem; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; padding: 3px 8px; border-radius: 999px; background: var(--no-soft); color: var(--no); }
+.notice { padding: 10px 12px; border-radius: var(--radius); background: var(--ribbon-soft); border: 1px solid var(--ribbon); font-size: .9rem; }

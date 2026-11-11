@@ -9,7 +9,7 @@
 //   onVotes(cb)    / setVote(id, obj)
 // Callbacks receive arrays of {id, ...data} (settings receives one object or null).
 
-import { firebaseConfig } from "./firebase-config.js?v=5";
+import { firebaseConfig } from "./firebase-config.js?v=6";
 
 export const DEFAULT_SETTINGS = { name: "Book Club", members: [], booksPerMember: 2 };
 

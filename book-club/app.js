@@ -1,5 +1,5 @@
-import { createStore, DEFAULT_SETTINGS } from "./store.js?v=5";
-import { searchBooks, manualBook } from "./lookup.js?v=5";
+import { createStore, DEFAULT_SETTINGS } from "./store.js?v=6";
+import { searchBooks, manualBook } from "./lookup.js?v=6";
 
 /* ------------------------------------------------------------------ */
 /* State                                                               */
@@ -40,6 +40,14 @@ const wordFor = (n) => EXCITE[Math.round(n)] || "";
 const memberName = (id) => state.settings?.members.find((m) => m.id === id)?.name || "Someone";
 const roundBooks = (roundId) => state.books.filter((b) => b.roundId === roundId);
 const roundVotes = (roundId) => state.votes.filter((v) => v.roundId === roundId);
+/** A book someone has already read is "retired": off the ballot for everyone, and its submitter gets the slot back. */
+const isRetired = (book) => book.retired === true;
+const activeBooks = (roundId) => roundBooks(roundId).filter((b) => !isRetired(b));
+const retiredBooks = (roundId) => roundBooks(roundId).filter(isRetired);
+const readByLine = (book) => {
+  const names = (book.readBy || []).map(memberName);
+  return names.length ? `Already read by ${names.join(", ")}` : "Already read";
+};
 const currentRound = () => state.rounds.find((r) => r.status !== "decided") || state.rounds[0] || null;
 /** Rounds hide who submitted what until results are revealed, unless the round opted out. */
 const isAnonymous = (round) => round.anonymous !== false && round.status !== "decided";
@@ -68,7 +76,7 @@ function tally(book, round, votes) {
 
 function rankBooks(round) {
   const votes = roundVotes(round.id);
-  const rows = roundBooks(round.id).map((b) => ({ book: b, t: tally(b, round, votes) }));
+  const rows = activeBooks(round.id).map((b) => ({ book: b, t: tally(b, round, votes) }));
   rows.sort((a, b) => {
     const am = a.t.mean ?? -1, bm = b.t.mean ?? -1;
     if (bm !== am) return bm - am;
@@ -123,8 +131,8 @@ async function boot() {
     state.rounds = [...rows].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
     render();
   });
-  store.onBooks((rows, err) => { if (!err) { state.books = rows; render(); } });
-  store.onVotes((rows, err) => { if (!err) { state.votes = rows; render(); } });
+  store.onBooks((rows, err) => { if (!err) { state.books = rows; render(); migrateLegacyReads(); } });
+  store.onVotes((rows, err) => { if (!err) { state.votes = rows; render(); migrateLegacyReads(); } });
 
   footer(store.kind === "firestore" ? "Live · shared with everyone who has the link" : "Local demo");
   wireChrome();
@@ -296,6 +304,27 @@ async function healMembership(settings) {
   finally { healing = false; }
 }
 
+/**
+ * "Already read it" used to be a private flag on each person's vote. In a round that is still
+ * open, promote those flags to the shared book so the book leaves everyone's ballot.
+ * Decided rounds are left exactly as they were scored.
+ */
+const migrated = new Set();
+function migrateLegacyReads() {
+  for (const round of state.rounds) {
+    if (round.status === "decided") continue;
+    const votes = roundVotes(round.id);
+    for (const book of roundBooks(round.id)) {
+      if (book.retired !== undefined || migrated.has(book.id)) continue;
+      const readers = votes.filter((v) => v.read?.[book.id] && v.voterId !== book.submittedBy).map((v) => v.voterId);
+      if (!readers.length) continue;
+      migrated.add(book.id);
+      state.store.updateBook(book.id, { retired: true, readBy: readers, retiredAt: Date.now() })
+        .catch((err) => { console.error("could not retire", book.title, err); migrated.delete(book.id); });
+    }
+  }
+}
+
 function requireMe() {
   if (state.meId && state.settings?.members.some((m) => m.id === state.meId)) return true;
   openMeDialog();
@@ -339,10 +368,12 @@ function renderNow() {
     return;
   }
 
-  const books = roundBooks(round.id);
+  const books = activeBooks(round.id);
+  const retired = retiredBooks(round.id);
   const votes = roundVotes(round.id);
   const members = state.settings.members;
   const mine = books.filter((b) => b.submittedBy === state.meId);
+  const mineRetired = retired.filter((b) => b.submittedBy === state.meId);
   const per = round.booksPerMember || state.settings.booksPerMember || 2;
 
   // Who has voted on everything they're supposed to
@@ -398,14 +429,26 @@ function renderNow() {
   }
 
   // My picks
-  const canSubmit = round.status === "submitting";
+  // A submitter whose book was retired may replace it even after submissions close.
+  const owedReplacement = mineRetired.length > 0 && mine.length < per;
+  const canSubmit = round.status === "submitting" || owedReplacement;
   const picks = el("section", { class: "stack" },
     el("div", { class: "row spread" },
       el("h3", { class: "section-title" }, "Your picks"),
       el("span", { class: "small muted num" }, `${mine.length} of ${per}`)),
-    mine.length ? el("div", { class: "shelf" }, mine.map((b) => bookCard(b, round, votes, { mine: true }))) : null,
+    owedReplacement
+      ? el("div", { class: "notice" },
+          el("b", {}, mineRetired.length === 1 ? `Someone's already read “${mineRetired[0].title}”.` : "Some of your picks have already been read."),
+          ` ${mineRetired.length === 1 ? "It's" : "They're"} off the ballot, so you get another suggestion.`)
+      : null,
+    mine.length || mineRetired.length
+      ? el("div", { class: "shelf" },
+          mine.map((b) => bookCard(b, round, votes, { mine: true })),
+          mineRetired.map((b) => bookCard(b, round, votes, { mine: true, retired: true })))
+      : null,
     canSubmit && mine.length < per
-      ? el("button", { class: "btn btn-primary", onclick: () => { if (requireMe()) openSearch(); } }, mine.length ? "Submit another book" : "Submit a book")
+      ? el("button", { class: "btn btn-primary", onclick: () => { if (requireMe()) openSearch(); } },
+          owedReplacement ? "Submit a replacement" : mine.length ? "Submit another book" : "Submit a book")
       : (!canSubmit && !mine.length ? el("p", { class: "muted small", style: "margin:0" }, "Submissions are closed for this round.") : null),
   );
   frag.append(picks);
@@ -420,6 +463,16 @@ function renderNow() {
       ? el("div", { class: "shelf" }, others.map((b) => bookCard(b, round, votes, { vote: true })))
       : el("div", { class: "empty" }, books.length ? "Nothing to rate yet — only your own books are in." : "No books submitted yet."),
   ));
+
+  // Off the ballot: books someone had already read
+  const othersRetired = retired.filter((b) => b.submittedBy !== state.meId);
+  if (othersRetired.length) {
+    frag.append(el("section", { class: "stack" },
+      el("div", { class: "row spread" },
+        el("h3", { class: "section-title" }, "Off the ballot"),
+        el("span", { class: "small muted" }, "Someone's read these. Nobody votes on them.")),
+      el("div", { class: "shelf" }, othersRetired.map((b) => bookCard(b, round, votes, { retired: true })))));
+  }
 
   root.replaceChildren(frag);
 }
@@ -451,7 +504,7 @@ function bookFacts(book) {
 }
 
 function bookCard(book, round, votes, opts = {}) {
-  const card = el("article", { class: `book ${opts.mine ? "is-mine" : ""} ${opts.winner ? "is-winner" : ""}` });
+  const card = el("article", { class: `book ${opts.mine ? "is-mine" : ""} ${opts.winner ? "is-winner" : ""} ${opts.retired ? "is-retired" : ""}` });
   if (opts.rank) card.append(el("span", { class: "rank" }, String(opts.rank)));
   if (opts.winner) card.append(el("span", { class: "ribbon" }, "Our pick"));
   card.append(coverEl(book));
@@ -462,6 +515,17 @@ function bookCard(book, round, votes, opts = {}) {
     submitterLine(book, round),
   );
 
+  if (opts.retired) {
+    const iMarked = (book.readBy || []).includes(state.meId);
+    body.append(el("div", { class: "retired-line" },
+      el("span", { class: "tag-read" }, "Off the ballot"),
+      el("span", { class: "small muted" }, readByLine(book)),
+      iMarked && round.status !== "decided"
+        ? el("button", { type: "button", class: "btn btn-ghost btn-sm", onclick: () => unretireBook(book, round) }, "Undo")
+        : null));
+    card.append(body);
+    return card;
+  }
   if (opts.mine) {
     body.append(ownScoreControl(book, round));
     if (round.status === "submitting") {
@@ -499,30 +563,24 @@ function voteControl(book, round, votes) {
   const my = votes.find((v) => v.voterId === state.meId);
   const cur = my?.scores?.[book.id];
   const has = typeof cur === "number";
-  const alreadyRead = !!my?.read?.[book.id];
   const box = el("div", { class: "vote" });
 
-  const write = async (patch) => {
+  const save = async (value) => {
     if (!requireMe()) return;
     const id = `${round.id}_${state.meId}`;
     const existing = state.votes.find((v) => v.id === id);
     await state.store.setVote(id, {
       roundId: round.id, voterId: state.meId,
-      scores: { ...(existing?.scores || {}), ...(patch.scores || {}) },
-      read: { ...(existing?.read || {}), ...(patch.read || {}) },
+      scores: { ...(existing?.scores || {}), [book.id]: value },
+      read: { ...(existing?.read || {}) },
       updatedAt: Date.now(),
     });
   };
-  const save = (value) => write({ scores: { [book.id]: value }, read: { [book.id]: false } });
   const readBtn = el("button", {
-    type: "button", class: `btn btn-sm ${alreadyRead ? "is-on-read" : "btn-ghost"}`,
-    onclick: () => write({ read: { [book.id]: !alreadyRead } }),
-  }, alreadyRead ? "✓ Already read it" : "Already read it");
+    type: "button", class: "btn btn-sm btn-ghost", title: "Takes this book off the ballot for everyone",
+    onclick: () => retireBook(book),
+  }, "Already read it");
 
-  if (alreadyRead) {
-    box.append(el("div", { class: "vote-head" }, el("span", {}, "You've read this one, so you sit it out."), readBtn));
-    return box;
-  }
   if (round.mode === "yesno") {
     box.append(yesNoButtons(has ? cur : null, save), el("div", { class: "row", style: "justify-content:flex-end" }, readBtn));
     return box;
@@ -625,11 +683,11 @@ function renderShelf() {
           el("h3", { class: "section-title" }, round.name),
           el("span", { class: `pill pill-${round.status}` }, { submitting: "Submitting", voting: "Voting", decided: "Decided" }[round.status])),
         el("span", { class: "small muted" }, when ? new Date(when).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" }) : "")),
-      rows.length
+      rows.length || retiredBooks(round.id).length
         ? el("div", { class: "shelf" }, rows.map((r, i) => bookCard(r.book, round, roundVotes(round.id), {
             rank: round.status === "decided" ? i + 1 : null, winner: winners.has(r.book.id),
             result: round.status === "decided" ? r.t : null,
-          })))
+          })), retiredBooks(round.id).map((b) => bookCard(b, round, [], { retired: true })))
         : el("div", { class: "empty" }, "No books in this round."),
     );
     if (round.status !== "decided" && round.id !== currentRound()?.id) {
@@ -760,14 +818,35 @@ function renderSearchResults(results) {
 async function submitBook(book) {
   if (!requireMe()) return;
   const round = currentRound();
-  if (!round || round.status !== "submitting") return toast("Submissions are closed");
+  if (!round || round.status === "decided") return toast("Submissions are closed");
   const per = round.booksPerMember || 2;
-  const mine = roundBooks(round.id).filter((b) => b.submittedBy === state.meId);
+  const mine = activeBooks(round.id).filter((b) => b.submittedBy === state.meId);
+  const owed = retiredBooks(round.id).some((b) => b.submittedBy === state.meId);
+  if (round.status !== "submitting" && !owed) return toast("Submissions are closed");
   if (mine.length >= per) return toast(`You've already submitted ${per}`);
   if (roundBooks(round.id).some((b) => b.title.toLowerCase() === book.title.toLowerCase())) return toast("That one's already in this round");
   $("#dlgSearch").close();
   await state.store.addBook({ ...book, roundId: round.id, submittedBy: state.meId, submittedAt: Date.now(), ownScore: null });
   toast(`Added “${book.title}”`);
+}
+
+/** Someone has read it: off the ballot for everyone, and the submitter gets the slot back. */
+async function retireBook(book) {
+  if (!requireMe()) return;
+  if (!confirm(`Already read “${book.title}”?\n\nThis takes it off the ballot for everyone, and whoever suggested it gets to suggest another.`)) return;
+  try {
+    await state.store.updateBook(book.id, { retired: true, readBy: [...new Set([...(book.readBy || []), state.meId])], retiredAt: Date.now() });
+    toast("Off the ballot");
+  } catch (err) { console.error(err); toast("Couldn't save. Try again."); }
+}
+
+async function unretireBook(book, round) {
+  const per = round.booksPerMember || 2;
+  const theirs = activeBooks(round.id).filter((b) => b.submittedBy === book.submittedBy).length;
+  if (theirs >= per) return toast("Too late to undo: a replacement is already in.");
+  if (!confirm(`Put “${book.title}” back on the ballot?`)) return;
+  try { await state.store.updateBook(book.id, { retired: false, readBy: [], retiredAt: null }); toast("Back on the ballot"); }
+  catch (err) { console.error(err); toast("Couldn't save. Try again."); }
 }
 
 async function removeBook(book) {
