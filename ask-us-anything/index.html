@@ -1,0 +1,454 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<title>Ask Us Anything Short List</title>
+<meta name="robots" content="noindex,nofollow">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Newsreader:opsz,wght@6..72,500&display=swap">
+<style>
+/* Layout: one calm reading column. Stephen's flags first, then what Theo and Ellen picked, then open calls, then team notes.
+   Colour is rationed: one accent for "yes", amber for "maybe", grey for everything else. */
+:root{
+  --bg:#F6F6F4; --surface:#FFFFFF; --sunk:#F1F1EE; --ink:#19191C; --muted:#6F6F78; --line:#E5E5E1;
+  --accent:#4338CA; --accent-soft:#ECEBFB; --on-accent:#FFFFFF;
+  --maybe:#9A6200; --maybe-soft:#FBF1DA;
+  --shadow:0 1px 2px rgba(20,20,30,.04),0 6px 20px rgba(20,20,30,.05);
+  --serif:"Newsreader",Georgia,"Times New Roman",serif;
+  --sans:"Inter",system-ui,-apple-system,"Segoe UI",Arial,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#111113; --surface:#1A1A1E; --sunk:#141417; --ink:#ECECEF; --muted:#A0A0AB; --line:#2B2B31;
+    --accent:#A9B2FF; --accent-soft:#25274A; --on-accent:#12132B;
+    --maybe:#E5B95A; --maybe-soft:#3A2F14;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 20px rgba(0,0,0,.25); color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#111113; --surface:#1A1A1E; --sunk:#141417; --ink:#ECECEF; --muted:#A0A0AB; --line:#2B2B31;
+  --accent:#A9B2FF; --accent-soft:#25274A; --on-accent:#12132B;
+  --maybe:#E5B95A; --maybe-soft:#3A2F14;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 20px rgba(0,0,0,.25); color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+button,input,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+.wrap{max-width:760px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.small{font-size:13px;color:var(--muted)}
+.label{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+
+header.top{padding-block:44px 24px}
+h1{font-family:var(--serif);font-weight:500;font-size:clamp(34px,6.5vw,48px);line-height:1.05;letter-spacing:-.015em;margin:8px 0 14px;text-wrap:balance}
+.dek{margin:0;max-width:60ch;font-size:16px;color:var(--muted)}
+.dek strong{color:var(--ink);font-weight:600}
+
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.bar .wrap{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding-block:10px}
+.tabs{display:flex;flex-wrap:wrap;gap:4px;background:var(--sunk);border-radius:12px;padding:4px;min-width:0}
+.tab{border:0;background:transparent;border-radius:9px;padding:6px 12px;font-size:13.5px;font-weight:500;color:var(--muted);cursor:pointer;transition:background .18s,color .18s}
+.tab span{margin-left:6px;font-variant-numeric:tabular-nums;opacity:.7}
+.tab:hover{color:var(--ink)}
+.tab[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
+#search{flex:1 1 160px;min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:14px}
+
+main{padding-block:4px 72px}
+section.grp{margin-top:36px}
+.grp > h2{font-family:var(--serif);font-weight:500;font-size:26px;letter-spacing:-.01em;margin:0 0 4px}
+.grp > p{margin:0 0 16px;color:var(--muted);max-width:62ch}
+.cards{display:flex;flex-direction:column;gap:14px}
+
+.card{background:var(--surface);border-radius:16px;box-shadow:var(--shadow);padding:22px 24px;display:flex;flex-direction:column;gap:12px;transition:box-shadow .2s}
+.card-top{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center}
+.badge{font-size:12px;font-weight:600;border-radius:999px;padding:3px 10px;background:var(--accent);color:var(--on-accent)}
+.badge.soft{background:var(--accent-soft);color:var(--accent)}
+.q{all:unset;display:flex;gap:12px;align-items:flex-start;cursor:pointer;font-family:var(--serif);font-weight:500;font-size:21px;line-height:1.32;text-wrap:pretty;width:100%}
+.q:hover .qt{text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:4px}
+.q:focus-visible{outline:2px solid var(--accent);outline-offset:4px;border-radius:6px}
+.q .qt{flex:1;min-width:0}
+.chev{flex:none;margin-top:8px;width:10px;height:10px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);transition:transform .25s}
+.q[aria-expanded="true"] .chev{transform:rotate(-135deg);margin-top:12px}
+.from{margin:0;color:var(--muted);font-size:14px;overflow-wrap:anywhere}
+.from b{color:var(--ink);font-weight:600}
+
+.fold{display:grid;grid-template-rows:0fr;transition:grid-template-rows .3s ease}
+.fold.open{grid-template-rows:1fr}
+.fold > div{overflow:hidden;min-height:0}
+.email{background:var(--sunk);border-radius:12px;padding:16px 18px;margin-top:2px}
+.email .label{display:block;margin-bottom:8px}
+.email pre{margin:0;white-space:pre-wrap;overflow-wrap:anywhere;font-family:var(--sans);font-size:14px;line-height:1.6}
+.email .trace{margin:12px 0 0;font-size:12px;color:var(--muted)}
+
+.votes{display:flex;flex-wrap:wrap;gap:6px}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:500;border-radius:999px;padding:4px 11px;background:var(--sunk);color:var(--muted)}
+.pill b{font-weight:600}
+.pill.yes,.pill.cond{background:var(--accent-soft);color:var(--accent)}
+.pill.maybe{background:var(--maybe-soft);color:var(--maybe)}
+.pill.blank,.pill.na,.pill.none{background:transparent;box-shadow:inset 0 0 0 1px var(--line)}
+.says{margin:0;display:flex;flex-direction:column;gap:6px;font-size:14px}
+.says p{margin:0;padding-left:12px;border-left:2px solid var(--line);color:var(--muted)}
+.says b{color:var(--ink);font-weight:600}
+.rel{margin:0;font-size:14px;color:var(--muted)}
+
+.notes{border-top:1px solid var(--line);padding-top:12px;display:flex;flex-direction:column;gap:10px}
+.note-list{display:flex;flex-direction:column;gap:8px}
+.note{display:flex;gap:10px;align-items:flex-start;font-size:14px}
+.note img{flex:none;width:24px;height:24px;border-radius:50%;margin-top:1px}
+.note .body{flex:1;min-width:0}
+.note .who{font-weight:600}
+.note .when{color:var(--muted);font-size:12px;margin-left:6px}
+.note .text{margin:1px 0 0;white-space:pre-wrap;overflow-wrap:anywhere}
+.note .del{border:0;background:transparent;color:var(--muted);font-size:12px;cursor:pointer;padding:2px 4px}
+.note .del:hover{color:var(--ink)}
+.note-form{display:flex;gap:8px}
+.note-form input,.note-form textarea{flex:1;min-width:0;background:var(--sunk);border:1px solid transparent;border-radius:10px;padding:8px 12px;font-size:14px;transition:border-color .15s,background .15s}
+.note-form textarea{min-height:76px;resize:vertical}
+.note-form input:focus,.note-form textarea:focus{background:var(--surface);border-color:var(--accent);outline:0}
+.btn{border:0;border-radius:10px;padding:8px 14px;font-size:14px;font-weight:600;background:var(--ink);color:var(--bg);cursor:pointer;transition:opacity .15s}
+.btn:hover{opacity:.85}
+.btn:disabled{opacity:.4;cursor:default}
+.note-status{font-size:13px;color:var(--muted);margin:0}
+#general .note-form{flex-direction:column;align-items:flex-start}
+#general .note-form textarea{width:100%}
+.map{margin-top:24px;display:flex;gap:10px;max-width:100%}
+.map-labels{display:grid;grid-template-rows:repeat(4,12px);gap:3px;font-size:11px;line-height:12px;color:var(--muted);padding-block:2px}
+.map-cols{flex:1;min-width:0;display:flex;gap:2px}
+.col{all:unset;flex:1;min-width:0;display:grid;grid-template-rows:repeat(4,12px);gap:3px;padding-block:2px;cursor:pointer;transition:transform .15s}
+.col.gap{margin-left:7px}
+.col:hover{transform:translateY(-2px)}
+.col:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+.cell{border-radius:3px;background:color-mix(in srgb,var(--muted) 38%,var(--bg))}
+.cell.yes{background:var(--accent)}
+.cell.cond{background:color-mix(in srgb,var(--accent) 50%,var(--bg))}
+.cell.maybe{background:var(--maybe)}
+.cell.blank,.cell.na,.cell.none,.cell.pk{background:transparent;box-shadow:inset 0 0 0 1px var(--line)}
+.cell.pk.on{background:var(--ink);box-shadow:none}
+.map-key{margin:10px 0 0;max-width:62ch}
+.right{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.pick{display:inline-flex;gap:7px;align-items:center;border:1px solid var(--line);background:transparent;border-radius:999px;padding:4px 12px 4px 6px;font-size:13px;font-weight:600;cursor:pointer;transition:background .18s,color .18s,border-color .18s}
+.pick i{width:16px;height:16px;border-radius:50%;border:1.5px solid var(--muted);display:grid;place-items:center;font-style:normal;font-size:11px;line-height:1;color:transparent}
+.pick:hover{border-color:var(--ink)}
+.pick:disabled{opacity:.45;cursor:default}
+.pick[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.pick[aria-pressed="true"] i{background:var(--bg);border-color:var(--bg);color:var(--ink)}
+.card.picked{box-shadow:0 0 0 2px var(--ink),var(--shadow)}
+.card.flash{box-shadow:0 0 0 3px var(--accent),var(--shadow)}
+.pick-who{margin:0;font-size:13px;color:var(--muted)}
+#copyfall{flex-basis:100%;min-height:120px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px;font-size:13px}
+.me{border:0;background:transparent;color:var(--muted);font-size:13px;cursor:pointer;padding:6px 4px;text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:3px}
+.me:hover{color:var(--ink)}
+dialog{border:0;border-radius:16px;padding:24px;max-width:min(360px,calc(100vw - 32px));background:var(--surface);color:var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.25)}
+dialog::backdrop{background:rgba(10,10,15,.45)}
+dialog h2{font-family:var(--serif);font-weight:500;font-size:24px;margin:0 0 6px}
+dialog p{margin:0 0 16px}
+.who-btns{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.empty{margin-top:36px;padding:28px;border:1px dashed var(--line);border-radius:16px;color:var(--muted);text-align:center}
+.fine{margin-top:44px;color:var(--muted);font-size:13px;max-width:66ch}
+@media (max-width:560px){ .card{padding:18px} .q{font-size:19px} }
+@media (prefers-reduced-motion:reduce){ *{transition:none!important} }
+</style>
+
+<header class="top">
+  <div class="wrap">
+    <div class="label">Freakonomics Radio · Ask Us Anything · Nov 11, 2026</div>
+    <h1>The Ask Us Anything short list</h1>
+    <p class="dek">Stephen has forwarded <strong>9 listener emails</strong>. <strong>6</strong> of them land on questions Theo and Ellen both picked. At the Nov 9 meeting he asked to start with <strong>3 to 5</strong>. Tap a question to read the listener's email, and press Pick on the ones you want.</p>
+    <div class="map" aria-label="Agreement map">
+      <div class="map-labels"><span>Stephen</span><span>Theo</span><span>Ellen</span><span>Picked</span></div>
+      <div class="map-cols" id="map"></div>
+    </div>
+    <p class="small map-key">One column per question, in page order. Solid is a yes, pale is yes with a merge, amber is maybe, grey is no, outlined is not rated. Tap a column to jump to it.</p>
+  </div>
+</header>
+
+<dialog id="who">
+  <h2>Who's picking?</h2>
+  <p class="small">Your name goes next to your picks and notes. This device remembers it.</p>
+  <div class="who-btns"><button type="button" class="btn" data-name="Stephen">Stephen</button><button type="button" class="btn" data-name="Ellen">Ellen</button><button type="button" class="btn" data-name="Theo">Theo</button></div>
+  <form id="who-form" class="note-form"><input id="who-other" type="text" placeholder="Someone else" aria-label="Your name" maxlength="40"><button class="btn" type="submit">OK</button></form>
+</dialog>
+<div class="bar">
+  <div class="wrap">
+    <div class="tabs" id="tabs" role="group" aria-label="Show"></div>
+    <input id="search" type="search" placeholder="Search" aria-label="Search questions and emails">
+    <button class="btn" id="copy" type="button" disabled>Copy picks for Google Docs</button>
+    <button class="me" id="me" type="button"></button>
+    <textarea id="copyfall" aria-label="Picked questions, to copy" hidden readonly></textarea>
+  </div>
+</div>
+
+<main>
+  <div class="wrap">
+    <div id="out"></div>
+    <div class="empty" id="none" hidden>Nothing matches. Clear the search or pick another tab.</div>
+    <section class="grp" id="general">
+      <h2>Team notes</h2>
+      <p>For anything that isn't about one question: format, order, who answers what. Anyone with this link can pick questions and add notes; they're saved to the Site picks and Site notes tabs of the tracker.</p>
+      <div class="card"><div class="notes" style="border-top:0;padding-top:0" data-notes="general"></div></div>
+    </section>
+    <p class="fine">Recs are quoted from the TJ Rec and EF Rec columns of the Ask Us Anything Tracker. Stephen's notes are quoted from his forwards to Theo and Ellen, Oct 12 to Nov 8. "By topic" means Stephen flagged one listener's email and Theo and Ellen both picked a different listener's question on the same subject.</p>
+  </div>
+</main>
+
+<script>
+const Q = [{"key": "r19", "row": 19, "id": "grp-GspH5li1gGQ-6", "who": "Eric Mickelson", "date": "Oct 12", "topic": "Ideas and what gets made", "q": "Have you ever worked on an episode and decided to scrap it? Why? Which episode surprised you most between the initial idea and the finished product?", "tj": ["yes", ""], "ef": ["cond", "I think we have a few different questions about killing episodes; let's organize and consolidate to one Q"], "sjd": {"date": "Oct 12", "note": "getting a lot of fun q's, is someone collating? would like to be looped in re picking Q's"}, "rel": "The only email all three of you have backed directly.", "badge": ["All three agree", 0], "agreed": true, "all3": true, "sec": "sjd", "email": {"subject": "Ask Us Anything", "body": "Here are my questions\n\n1. Have you ever worked on an episode and decided to scrap it? If so, why?\n\n2. What episode surprised you the most, between the initial idea and the finished episode.\n\nThank you,\nEric Mickelson\nSent from my iPhone"}}, {"key": "r43", "row": 43, "id": "gm-1a17692593d179a9", "who": "Steve Ozanne", "date": "Oct 26", "topic": "The business and the inbox", "q": "With A.I. ads (ChatGPT at about 30:18 in Ep. 692) running inside episodes about A.I., is there editorial discussion, or are business and content separate? Any policy on which ads you accept or where they go? Are ads hard-placed or dynamically inserted?", "tj": ["yes", "YES, we need an ads explainer, comes up too often"], "ef": ["blank", ""], "sjd": {"date": "Oct 26", "note": "Good q for us … also: ugh re the placement"}, "rel": "Ellen hasn't rated this email, but she said Yes to David L.'s question on the same subject (how you choose advertisers).", "badge": ["All three, by topic", 1], "agreed": false, "all3": true, "sec": "sjd", "email": {"subject": "Ask Us Anything", "body": "I am struck, in listening to your podcasts by the juxtaposition of the content of some podcasts with the advertising placed in those same podcasts.\n\nThe ones that I have noticed most recently are the AI-related ads that Stephen Dubner reads in the middle of episodes that talk about the value of AI. An example is in episode 692, \"What Will A.I. Do to (and for) Human Creativity?\". At around 30:18 there is an ad for ChatGPT (at least when I have listened to it). It really makes me consider the value of ChatGPT in the context of the podcast rather in the general terms that I am sure the advertiser wants me to consider it.\n\nIs there any discussion on the editorial side about this, or are the business side and the content side of Freakonomics totally separate in this regard? Is there any policy regarding the nature of ads that the show will accept or around their placement in different episodes?\n\nOn a purely technical note, are the ads hard placed in the episodes, or is there just a trigger that calls for one of the latest 30 second ads or 60 second ads, etc.. If I listen to the show 6 months from now, will I hear the same ads? What if the sponsor goes bankrupt or no longer wants that ad placement?\n\nThanks for considering my questions. I have enjoyed your show for years. It is only later in life that I have really come to appreciate how interesting economics can be.\n\n-- Steve Ozanne\n\n\"I wish it need not have happened in my time,\" said Frodo.\n\"So do I\", said Gandalf. \"So do all who live to see such times. But\nthat is not for them to decide. All we have to decide is what to do\nwith the time that is given us.\"\n― J.R.R. Tolkien, The Fellowship of the Ring"}}, {"key": "r55", "row": 55, "id": "gm-1a1ae843de22a48b", "who": "Alex Rich", "date": "Nov 5", "topic": "Ideas and what gets made", "q": "How do you feel about delivering insights, when few people develop original ones and fewer get them heard? How do you weigh which topics get airtime: an editorial table, or have you \"money-balled\" it?", "tj": ["blank", ""], "ef": ["blank", ""], "sjd": {"date": "Nov 5", "note": "We could talk about this one for months"}, "rel": "Not rated yet. His second question is the one Theo and Ellen both picked from three other listeners: where ideas come from and how you choose among them.", "badge": ["All three, by topic", 1], "agreed": false, "all3": true, "sec": "sjd", "email": {"subject": "Ask us anything", "body": "Hi Freakonomics team!\n\nI have always loved Freakonomics’ work. I never read the books (sorry) but I’ve listened to the shows for as long as I can remember. I hope you’ll forgive me.\n\nI’ve always listened because you meet a need that I and others have: we want insights. I heard something like it described on your show as curiosity, but the truth is I’m often not curious about a subject until I see the episode show up in my feed. In the same way journalists don’t know where they’ll end up until they pull threads. Except that I don’t have to pull threads and investigate because you’ve already done that, and I can just consume the insights. To put another way, I have come to think of an ”insight” as this quantized commodity that can kind of be shipped around, with all the work that went into it hidden, lost, and no longer needed.\n\nIt feels like society now is a market of insights for better or for worse. Thought leaders, podcasters, late night hosts, YouTubers, Internet personalities are all insight factories and none of those jobs really existed 100 years ago.\n\nI have a million questions related to this (even though it may not be as deep as I think it is!), but here’s two that I would love to hear your opinion on.\n\n1. How do you *feel* about delivering insights? Few people develop original insights and even fewer have any heard by others. 2. More practically, how do you weigh the value of insights/topics/subjects to convey? Is it like what I’d picture of a classic community editing table or have you “money-balled” it and identified a way to somewhat objectively value what you can/should spend your airtime on?\n\nAgain, thanks for the show and I hope the team knows every day how much you\nimprove your listeners’ lives.\n\nBest,\nAlex"}}, {"key": "lamarche", "row": 60, "id": "sjd-fwd-1a1bd21fe2d9a7e5", "who": "Astrid LaMarche", "date": "Nov 6", "topic": "Writing, sound, fact-checking", "q": "When it's just Stephen talking (the intro, explanations, the end), is that all scripted, or are parts spontaneous? It doesn't sound read.", "tj": ["blank", ""], "ef": ["blank", ""], "sjd": {"date": "Nov 8", "note": "not bad"}, "rel": "Same ground as Robert Goldblatt's question about who writes the intros, which Theo and Ellen both picked.", "badge": ["All three, by topic", 1], "agreed": false, "all3": true, "sec": "sjd", "email": {"subject": "AMA podcast making", "body": "Hi Stephen & team,\n\nIf you’re still taking AMA questions:\n\nWhen it’s just Stephen talking, the intro, explanations, or at the end, is that all scripted text that Stephen reads? Are there spontaneous elements in these parts?\n\nI’m asking as for Stephen and other great podcast hosts these parts appear as if they spoke freely, and it does not sound as if read from a script.\nIn many podcasts you can hear when a host reads.\n\nAlways learn lots from you. Thank you!\n\nAstrid"}}, {"key": "martinie", "row": 58, "id": "sjd-fwd-1a161160f52df9ef", "who": "Sydney Martinie", "date": "Oct 21", "topic": "The business and the inbox", "q": "What does a producer actually do, and why are there so many?", "tj": ["blank", ""], "ef": ["blank", ""], "sjd": {"date": "Oct 21", "note": "fun one"}, "rel": "Close to Jessica Hsiao's question about who is on the crew, which Theo and Ellen both picked. Theo replied to Stephen on Oct 21: \"still trying to figure this one out...\"", "badge": ["All three, by topic", 1], "agreed": false, "all3": true, "sec": "sjd", "email": {"subject": "Podcasts and AMA", "body": "Loved the episode !\nI would call them « stories » my very southern Grandma used to call any and everything her « stories »\nAMA : what does a producer actually do and why are there so many ?\nThanks,\nSydney Martinie"}}, {"key": "snyder", "row": 56, "id": "sjd-fwd-1a14187e230c5805", "who": "Sophie Snyder", "date": "Oct 15", "topic": "The business and the inbox", "q": "What does podcast production entail? Would you consider another No Stupid Questions, or something like it? Episode idea: the cost and benefit of fast judgments. When will you come back to L.A.?", "tj": ["blank", ""], "ef": ["blank", ""], "sjd": {"date": "Oct 15", "note": "a person like this, with multiple (closely observed) questions, is good for AUA?"}, "rel": "Her first question pairs with Sydney Martinie's and Jessica Hsiao's. The rest are unrated.", "badge": ["All three, by topic", 1], "agreed": false, "all3": true, "sec": "sjd", "email": {"subject": "Ask you anything question", "body": "Hello there,\n\nI was discussing your show business baby episode with my son, which prompted the question - ‘what is podcast production?’ I said it’s things like editing, adding music, sound control, but I realized that I don’t really know. So, what does production entail?\n\nAlso, would you consider another no stupid questions show (or something similar)? I miss it.\n\nAlso, would you consider addressing this question as an episode: what is the cost/benefit of fast judgments? I’ve asked before if there’s research behind people appearances, which makes me think that people must make a lot of quick judgments on so many things, like how someone looks or sounds. How much opportunity do we miss out on by doing this? Or, on the other hand, how much costs do we potentially avoid?\n\nALSO, when will you ever come back to LA?\n\n[One personal paragraph left out here. It's in Stephen's forward of Oct 15.]\n\nAnyway, thank you for your show. I’m a die hard enthusiast.\n\nBest,\nSophie"}}, {"key": "blake", "row": 59, "id": "sjd-fwd-1a19a0fbecd42c4b", "who": "Blake, Australia", "date": "Nov 1", "topic": "Everything else", "q": "How do I get Stephen to be my dad?", "tj": ["blank", ""], "ef": ["blank", ""], "sjd": {"date": "Nov 1", "note": "funny?"}, "rel": "", "badge": null, "agreed": false, "all3": false, "sec": "sjd", "email": {"subject": "Ask a question", "body": "Hi,\nSlightly off centre but you did say to ask anything…\n\nHow do I get Stephen to be my dad?! He seems like he’d be a great dad 😊\n\nOne difficulty would be moving to Australia for me but maybe a retirement plan?\n\nRegards,\n\nBlake"}}, {"key": "lembke", "row": 57, "id": "sjd-fwd-1a14b7bfd2e9b167", "who": "John Lembke, Longmont, Colorado", "date": "Oct 17", "topic": "Everything else", "q": "A comment, not a question: inspired by \"America's Hidden Duopoly,\" he helped found RCV for Longmont, which votes this fall on multi-winner ranked-choice voting.", "tj": ["blank", ""], "ef": ["blank", ""], "sjd": {"date": "Oct 17", "note": "Maybe worth mentioning in PC Sortition or in a mail bag episode?"}, "rel": "Theo replied on Oct 18 that he'd reach out for a call, and that revisiting ideas like duopoly could be fun in the mailbag.", "badge": null, "agreed": false, "all3": false, "sec": "sjd", "email": {"subject": "Website contact form: comment on an episode", "body": "I was inspired by the episode America's hidden duopoly. I live in Longmont, Colorado and we will be voting this fall to implement Ranked Choice Voting. I helped found the organization RCV for Longmont.\nIt is amazing to hear an idea and work on it for many years and finally see it about to become a reality. We believe that it will pass with a wide margin. If it passes I will write again.\n\nWe are taking the ideas in your podcast episode one step further. We are implementing multi winner ranked choice voting also known as proportional representation. This is an ideal way to break up a political duopoly. We will have 3 winners in our at-large election for our city council.\n\nThank you for the inspiration!"}}, {"key": "r20", "row": 20, "id": "grp-7mY2lnYjM5E-1", "who": "Diana Greg, CFP", "date": "Oct 13", "topic": "Everything else", "q": "What percent of auto-enrolled 401(k) assets stay in the account until retirement age, and is that enough to call auto-enrollment a success?", "tj": ["no", ""], "ef": ["no", ""], "sjd": {"date": "Oct 13", "note": "love this one, we just had a good convo about it with … someone?! i think nick chater"}, "rel": "Stephen likes it; Theo and Ellen both passed.", "badge": null, "agreed": false, "all3": false, "sec": "sjd", "email": {"subject": "Ask us anything: Is 401(k) auto-enrollment overrated?", "body": "Hi Freakonomics team!\n\nHot take: Auto-enrollment, the darling of behavioral economics, is overrated. It's great at getting assets into 401(k)s, but I reckon \"a lot\" of that money leaks out before retirement.\n\nMy actual question: What percent of auto-enrolled 401(k) assets remain in the account until retirement age, and is that enough to still call auto-enrollment a success?\n\nWhenever auto-enrollment gets touted, I want to interject: we celebrate enrollment (partly because it's easier to measure) and ignore retirement outcomes. To be fair to my beloved 401(k), the jury's still out -- it doesn't reach full retirement age until 2048, and auto-enrollment is even younger.\n\nI worked at a 401(k) startup from 2016 to 2021 and saw more and more people cash out when they changed jobs, especially if they'd been auto-enrolled. Many worked at small businesses with no match, so the 10% penalty often left them worse off than if they'd never contributed.\n\nMeanwhile, technology and the SECURE Acts have stripped out the sludge, and withdrawals now take a few clicks. That's happening just as auto-enroll becomes mandatory for most new plans.\n\nMaybe the answer isn't a better nudge, but a better system:\n\nEmergency savings accounts (see this 2019 GAO study I was interviewed for) Behavioral-focused design (see this 2018 workshop I led) Redirecting 401(k) tax breaks toward other ways of helping people save Trump Accounts for adults, anyone? Ideally ones that actually auto-enroll and auto-fund.\n\nI must know the answer to this question before I retire! Happy to help however I can.\n\nThanks,\n\nDiana Greg, CFP®\n\nFounding Product Manager, Comprehensive"}}, {"key": "r33", "row": 33, "id": "gm-1a16a50ea6de1a47", "who": "joncorkins@gmail.com (unsigned)", "date": "Oct 23", "topic": "Ideas and what gets made", "q": "Where do you get your ideas from?", "tj": ["yes", ""], "ef": ["yes", ""], "sjd": null, "rel": "Stephen flagged a related email: Alex Rich on how you weigh which topics get airtime.", "badge": ["All three, by topic", 1], "agreed": true, "all3": true, "sec": "agree", "email": {"subject": "Ask us anything", "body": "Where do you get your ideas from?\n\nSent from my iPhone"}}, {"key": "r46", "row": 46, "id": "gm-1a17ec24c32c594b", "who": "Jessica Hsiao, San Mateo, CA", "date": "Oct 27", "topic": "Ideas and what gets made", "q": "How do you narrow ideas down to one topic, and have you developed topics you chose not to release? How long from pitch to feed, and what stalls it? How do you find interviewees, and do you pay them? How big is the crew, and what pays for it?", "tj": ["yes", "Repeat, Yes"], "ef": ["yes", ""], "sjd": null, "rel": "Stephen flagged three related emails: Alex Rich (choosing topics), Sydney Martinie and Sophie Snyder (what producers and production do).", "badge": ["All three, by topic", 1], "agreed": true, "all3": true, "sec": "agree", "email": {"subject": "Ask Us Anything", "body": "Dear Freakonomics Team,\n\nI'm a regular listener and love the depth you bring to every episode. I\nhave a few behind-the-scenes questions about your podcast production:\n\n1. Topic Selection: How do you typically narrow down the massive list of potential ideas to choose a single topic? Do you have any topics you developed but decided not to release? If so, why? 2. Timeline: From initial pitch to hitting the feed, how long does it usually take to research and produce a standard episode? What top challenges could stall the process and prolong the production timeline? 3. Sourcing Experts: How do you identify the specific people you want to interview, and do you ever pay your interviewees for their time? 4. The Crew: How many people work behind the curtain on your production crew to make the show happen every week? What profit sources support the whole production and the crew?\n\nThanks for keeping us all sharp, and I look forward to hearing if these\nmake it into an upcoming episode!\n\nBest regards,\nJessica Hsiao\nSan Mateo, CA"}}, {"key": "r16", "row": 16, "id": "grp-LInDmPQoVKk-1", "who": "Allen DeGraffenreid", "date": "Oct 12", "topic": "Ideas and what gets made", "q": "How many people decide which ideas make it to production? How many stories do you consider in a typical week? How long from idea to Dubner at the mic?", "tj": ["yes", "Yes to the process Q"], "ef": ["cond", "Should consolidate with other related Qs"], "sjd": null, "rel": "Stephen flagged a related email: Alex Rich on how you weigh which topics get airtime. Allen's email also pitches an episode on the NCAA transfer portal.", "badge": ["All three, by topic", 1], "agreed": true, "all3": true, "sec": "agree", "email": {"subject": "Ask us Anything", "body": "[Forwarded; originally sent Oct 11 to radio@freakanomics.com]\n\nHello Freakonomics Team,\n\nFirst, thank you for giving me the opportunity to ask what may be some pretty ridiculous questions. I'll try to keep the ridiculousness to a reasonable level.\n\nYears ago, I read Freakonomics, although I'm not entirely sure I understood what economics actually was at the time. When I discovered the podcast, I went all the way back to the beginning and started listening.\n\nToday, Freakonomics Radio is hands down my favorite podcast. And that's saying something, considering how many hours I've spent listening.\n\nNow for my ridiculous questions.\n\nHow many people actually decide which podcast ideas make it to production and which ones end up in the trash?\n\nHow many potential stories do you consider in a typical week?\n\nAnd how long does it take to go from someone saying, \"Hey, here's a crazy idea,\" to Stephen Dubner sitting in front of a microphone making the rest of us a little smarter?\n\nI'm fascinated by the process, particularly how you find the questions most people never think to ask.\n\nNow, for something a little more serious.\n\nI'm a former collegiate and professional football player, and there's something happening in college athletics that I believe deserves the Freakonomics treatment.\n\nThe NCAA transfer portal.\n\nI come from a generation when athletes had to fight through adversity, earn playing time, and sometimes accept that they weren't nearly as good as their mothers told them they were.\n\nToday, I believe athletes are getting softer in some respects. But I'm not convinced the athletes themselves are the biggest problem.\n\nWe now have an environment where agents, family members, coaches, and other interested parties are advising young athletes about playing time, money, exposure, and their futures.\n\nBut here's what concerns me.\n\nWhat happens when an athlete enters the transfer portal believing there's a better opportunity waiting, only to discover that nobody wants him?\n\nNo scholarship. No new team. Possibly no clear path back to the school he left.\n\nJust a young man sitting on Mom's couch wondering what in the world happened.\n\nAnd this isn't just a football problem. From what I'm hearing and reading, women's college basketball may be facing some of the same challenges. Thousands of young women are entering the transfer portal, presumably looking for something better. But how many actually find it? How many end up with fewer opportunities than they had before? And how many families are being encouraged to gamble with a college education without fully understanding the odds?\n\nI don't know those answers. But I suspect the numbers would tell a fascinating, and perhaps heartbreaking, story.\n\nAnd here's another question worth asking: Are we so busy celebrating the athletes who win big in this new marketplace that we've completely forgotten about those who lose?\n\nAnd the people who advised him to make that decision? Where are they?\n\nI'm particularly interested in the economics behind these decisions.\n\nWho benefits from the transfer portal? Who assumes the risk? What incentives are driving the advice athletes receive? And how many young people are discovering too late that they were never as valuable in the marketplace as someone convinced them they were?\n\nI'm not suggesting athletes shouldn't have the freedom to transfer or make money. Quite the opposite. I believe young people should have opportunities to improve their circumstances.\n\nBut freedom to make a decision doesn't necessarily mean someone has prepared you to understand its consequences.\n\nAnd I worry that we're creating a generation of young athletes who are learning some very expensive lessons without anyone adequately explaining the risks beforehand.\n\nI also recognize that some people won't appreciate this conversation. It's much easier to blame the athlete for making a bad decision than to examine the system of incentives that helped create it.\n\nThat's precisely why I think Freakonomics would be the perfect place to explore it.\n\nYour team's ability to find remarkable experts, challenge assumptions, uncover unexpected incentives, and explain complex economic behavior could give this subject the attention it deserves.\n\nMaybe the real story isn't that college athletes are making bad decisions.\n\nMaybe it's that we've created a system where too many people can benefit from an athlete's decision without sharing the consequences when that decision goes wrong.\n\nNow THAT is an episode I'd love to hear.\n\nThanks for all the hours of entertainment, education, and making me question things I previously thought I understood.\n\nKeep asking the ridiculous questions. Sometimes those are the most important ones.\n\nAll the best,\n\nAllen DeGraffenreid\nFormer Collegiate and Professional Football Player"}}, {"key": "r39", "row": 39, "id": "gm-1a1706b928350156", "who": "Robert Goldblatt", "date": "Oct 24", "topic": "Writing, sound, fact-checking", "q": "Who writes the witty endings to the episode intros (e.g. \"to thine own exoself be true\" in the A.I. and creativity episode)? Do other people have a say in whether they stay in?", "tj": ["yes", ""], "ef": ["yes", ""], "sjd": null, "rel": "Stephen flagged a related email: Astrid LaMarche on whether his solo narration is scripted.", "badge": ["All three, by topic", 1], "agreed": true, "all3": true, "sec": "agree", "email": {"subject": "Ask us anything", "body": "Who writes the witty endings to the podcast introductions? For example, who wrote \"to thine own exoself be true\" at the end of the intro to the AI and creativity episode? Do other people have a say in whether to include it in the show?\n\nThank you,\nRobert Goldblatt"}}, {"key": "r49", "row": 49, "id": "gm-1a183742d7651687", "who": "David L.", "date": "Oct 28", "topic": "The business and the inbox", "q": "How do you choose your advertisers, and do you get to choose the ads that platforms like Spotify play on the show?", "tj": ["yes", "Repeat, Yes"], "ef": ["yes", ""], "sjd": null, "rel": "Stephen flagged a related email: Steve Ozanne on A.I. ads inside A.I. episodes.", "badge": ["All three, by topic", 1], "agreed": true, "all3": true, "sec": "agree", "email": {"subject": "Ask us anything", "body": "Hello Freakonomics team,\n\nMy question is simply, how do you choose your advertisers? Ads always come with the implicit endorsement of the program carrying them, even on platforms where the program doesn't get to choose. So it'd be interesting to hear whether you get to choose the ads Spotify (for example) plays - and if so, how?\n\nThank you all for the many hours of illumination.\n\nDavid L."}}, {"key": "r3", "row": 3, "id": "grp-GspH5li1gGQ-1", "who": "John Thompson", "date": "Oct 9", "topic": "Guests and interviews", "q": "How do you sequence your interviews with multiple, often very busy guests to get the best out of your time with them?", "tj": ["yes", "Yes, with reword"], "ef": ["yes", ""], "sjd": null, "rel": "", "badge": null, "agreed": true, "all3": false, "sec": "agree", "email": {"subject": "Ask Us Anything", "body": "Hi Stephen and Freakonomics crew!\n\nIn most episodes, there are multiple guests or interviewees. How do you sequence your interviews with these often very busy people to get the best out of your time with them?\n\nLove the show!\n\nJohn Thompson"}}, {"key": "r28", "row": 28, "id": "gm-1a16b067180149bf", "who": "Henry Ebben", "date": "Oct 23", "topic": "Guests and interviews", "q": "What's your success rate on securing guests?", "tj": ["yes", ""], "ef": ["yes", ""], "sjd": null, "rel": "", "badge": null, "agreed": true, "all3": false, "sec": "agree", "email": {"subject": "Ask Us Anything", "body": "What’s your success rate on securing guests?\n\nThanks.\nHenry Ebben"}}, {"key": "r35", "row": 35, "id": "gm-1a16b9e0525ee6e9", "who": "Hadassah Moore, Northwest Indiana", "date": "Oct 23", "topic": "Guests and interviews", "q": "Which guest or interview do you consider your greatest \"get\": a long shot or white whale you had to really hunt down?", "tj": ["yes", ""], "ef": ["yes", ""], "sjd": null, "rel": "", "badge": null, "agreed": true, "all3": false, "sec": "agree", "email": {"subject": "Ask us anything", "body": "Hello, Stephen and Team!\n\nMy question for you is: which guest/interview do you consider to be your greatest \"get\"? An expert you thought would be a long shot or that you had to really hunt down. A white whale perhaps.\n\nPlease don't stop any time soon!!\n\n-Hadassah Moore from Northwest Indiana"}}, {"key": "r47", "row": 47, "id": "gm-1a180a22c9fb26ae", "who": "akowriting@gmail.com (unsigned)", "date": "Oct 27", "topic": "Guests and interviews", "q": "Why doesn't Stephen push guests to answer more directly when they sidestep or give partial answers? Is the push edited out, is it an old journalist practice, or is he giving them the benefit of the doubt?", "tj": ["yes", ""], "ef": ["cond", "Could consider rewording to be more broadly about interview approach and include this"], "sjd": null, "rel": "", "badge": null, "agreed": true, "all3": false, "sec": "agree", "email": {"subject": "Ask us anything", "body": "Hey!\n\nWhy does Stephen not push guests to more directly answer some of his\nquestions?\n\nI note some sidesteps, or partial answers, and after they're given we move on. I guess I'm wondering if that's just how things are edited (does Stephen push for clarification but it's edited out) or is there an old journalist process going on? Perhaps you give them the benefit of the doubt that they understood your question and chose to provide their non-answer or partial answer as the whole response."}}, {"key": "r44", "row": 44, "id": "gm-1a1793a6a7510cd0", "who": "Tim Parsons, Virginia Beach, VA", "date": "Oct 26", "topic": "Writing, sound, fact-checking", "q": "Who chooses the extra clip after the credits, was it planned from the beginning, and whose idea was it? How much tape is recorded and not used? Have you considered outtake shows?", "tj": ["yes", ""], "ef": ["yes", ""], "sjd": null, "rel": "", "badge": null, "agreed": true, "all3": false, "sec": "agree", "email": {"subject": "Ask Us Anything", "body": "Fun exercise! Here are things I find myself asking when I listen.\n\nWho chooses the extra clip after the credits? Was that planned from the very beginning, and whose idea was it?\n\nHow much extra footage is typically recorded and not used?\n\nHave you considered making outtake shows, or are you already doing that?\n\nRegards,\nTim Parsons\nVirginia Beach, VA"}}, {"key": "r31", "row": 31, "id": "gm-1a159078a0769fbb", "who": "Martin, Germany", "date": "Oct 20", "topic": "Writing, sound, fact-checking", "q": "How does Stephen's voice always sound the same, at constant high quality, across interviews, interjections and a decade of episodes? More broadly, how is the show's audio recorded and engineered?", "tj": ["yes", ""], "ef": ["yes", ""], "sjd": null, "rel": "", "badge": null, "agreed": true, "all3": false, "sec": "agree", "email": {"subject": "Ask Us Anything", "body": "Hi!\n\nI have a question about the audio on your podcast. Basically, what it boils down: How does Stephen always sound the same (with very few exceptions, like when he's recording himself on a portable device)? During interviews, when he inserts interjections in interviews, and for at least a decade (or how ever long I've been listening to this podcast), the audio for when Stephen speaks is always the same, constant high quality.\n\nOther podcasts are not like this: You can tell variances over time, or\nwhen they're recording from somewhere else, they sound different.\n\nOverall I'm interested in the audio recording engineering of this podcast, but the question of Stephen's eternally good voice quality intrigues me in particular.\n\nThanks!\n\nMartin from Germany"}}, {"key": "r27", "row": 27, "id": "gm-1a14c13272c46333", "who": "Scott Segal, MD, Wake Forest", "date": "Oct 17", "topic": "Writing, sound, fact-checking", "q": "How does fact-checking on the show actually work: Googling or A.I., calling experts, the library? How do fact-checkers decide what to check, and how does a non-expert know which sources to trust?", "tj": ["yes", "Yes, let's go more in depth"], "ef": ["yes", ""], "sjd": null, "rel": "", "badge": null, "agreed": true, "all3": false, "sec": "agree", "email": {"subject": "ask us anything", "body": "Hi Stephen,\n\nI’ve been trying to find an answer to this question for some time and I appreciate the opportunity to ask someone like you who could answer!\n\nEvery single podcast I listen to, including yours, includes a credit for someone who checks the facts. “Fact checking” sounds like something simple, but I actually don’t understand exactly how it works. Does someone just Google (or ask Claude or ChatGPT) about an item mentioned in the show? Do they call experts or go to the library?! (haha) How do they decide what to check? How do they decide whether the information they find (online or elsewhere) is accurate?\n\nI suppose I “fact check” things in my world (academic medicine, in particular perioperative medicine or preoperative assessment) when I look up the latest information about a drug or disease and its anesthetic implications. I try to use authoritative sources, and i feel I can adjudicate the quality of the source. But I'm an expert in that field. How does a general fact checker know what to trust?\n\nHope you decide to answer this question! i’m going to pose it to some of your colleagues/competitors too, so pick me, pick me!\n\nScott\n\nScott Segal, MD, MHCM\nProfessor\nDepartment of Anesthesiology\nMedical Director, Preoperative Optimization Clinic\nAtrium Health Wake Forest Baptist\nWake Forest School of Medicine\nMedical Center Blvd \\ Winston-Salem NC 27157"}}, {"key": "r23", "row": 23, "id": "gm-1a13737db04e3583", "who": "Unsigned, via radio@", "date": "Oct 13", "topic": "Writing, sound, fact-checking", "q": "Why does Stephen use the word \"plainly\" in nearly every episode? Does he find it less condescending than \"clearly\" or \"obviously\"?", "tj": ["yes", ""], "ef": ["yes", ""], "sjd": null, "rel": "", "badge": null, "agreed": true, "all3": false, "sec": "agree", "email": {"subject": "Ask Us Anything", "body": "Why do you, Stephen Dubner, use the word “plainly” in nearly every episode? Do you find it less offensive or condescending instead of using the more common “clearly” or “obviously”?\n\nThe first few times I heard it, it stood out, but now it’s essentially become a drinking game ;)\n\nThanks!\n\nSent from my iPhone"}}, {"key": "r40", "row": 40, "id": "gm-1a172385050a37e8", "who": "Birkley Grunewald, Duke Kunshan University", "date": "Oct 25", "topic": "The business and the inbox", "q": "Who reads this email? What's your process for reading listener mail, how do you tell a good idea from an unhelpful one, how many emails do you get, and how do you sort them?", "tj": ["yes", ""], "ef": ["yes", ""], "sjd": null, "rel": "", "badge": null, "agreed": true, "all3": false, "sec": "agree", "email": {"subject": "Ask Us Anything", "body": "Hi Freakonomics team!\n\nI hope this email finds you well. My question for you is: \"who reads this email?\"\n\nI often hear the call to submit questions and love the freakonomics community engagement, but I am curious. What is your process for reading through the emails you get, how do you tell a good idea from a not so helpful one, how many emails do you normally receive, and how do you sort through all the feedback?\n\nLove all the work you are doing! Currently studying economics for my undergrad in large part thanks to the team and making economics applicable to the everyday.\n\nAll the best,\nBirkley Grunewald\nDuke Kunshan University"}}, {"key": "r10", "row": 10, "id": "grp-000MzWruIMc-1", "who": "Keith Brawner", "date": "Oct 11", "topic": "Coverage gaps", "q": "Do you not find it strange that you've had relatively few touch points with the military, given its size in the economy and the culture? Is it deliberate?", "tj": ["yes", ""], "ef": ["yes", "Yes, tweaked"], "sjd": null, "rel": "Ellen wants Mike Gill's military-industrial-complex question folded into this answer.", "badge": null, "agreed": true, "all3": false, "sec": "agree", "email": {"subject": "Why no military episodes?", "body": "The military, generally is a significant portion of the economy and involved with nearly every major national level economic decision in some way - and a very large portion of the nations technology advancement efforts.  It also has deep culture and cultural relevance, with something like 10% of American men having served (more if you count civilian service or contractors).  Do you not find it strange that you've had relatively few touch points with this major institution?\n\nIf it is deliberate - that's okay, but I figured I'd ask.\n\n- Keith"}}, {"key": "r13", "row": 13, "id": "grp-GspH5li1gGQ-3", "who": "Tim", "date": "Oct 12", "topic": "The business and the inbox", "q": "Has covering businesses ever led you to invest in them? If so, which; if not, why not? What's the one habit to adopt and one to avoid to think like an economist? Which conventional wisdom did you expect to debunk, only to find the data supported it?", "tj": ["yes", ""], "ef": ["maybe", ""], "sjd": null, "rel": "", "badge": null, "agreed": false, "all3": false, "sec": "open", "email": {"subject": "Ask Us Anything", "body": "Hey,\n\nLong-time listener here. My question for the AMA is about investing.\n\nOver the years you've interviewed hundreds of founders, executives, and economists, and in the process you've come to understand how a lot of businesses actually work. Has that ever led you to invest in any of the companies you've covered? If so, which ones? And if not, why haven't you? Is it a conflict-of-interest rule, a sense that understanding a business model isn't the same as having an edge, or something else?\n\nOther questions I have are:\n\nIf someone wanted to think more like an economist in daily life, what's the one habit to adopt and the one habit to avoid?\n\nWhich popular piece of conventional wisdom did you most expect to debunk, only to find the data supported it? Freakonomics is known for flipping assumptions, so I'd like to hear about the times the boring answer won.\n\nThank you for your time reading this but also putting together the episode."}}, {"key": "r25", "row": 25, "id": "gm-1a141443e64c0f05", "who": "Greg Wasserman, RSS.com", "date": "Oct 15", "topic": "The business and the inbox", "q": "What's your own take on what the guests said in Ep. 690 (\"It's Show Business, Baby!\"), since you're in the industry you're reporting on? If hobbyists are separated from the professionals, how do you avoid being left with only big-business content? What do you make of A.I. content competing with shows like yours?", "tj": ["yes", ""], "ef": ["maybe", ""], "sjd": null, "rel": "", "badge": null, "agreed": false, "all3": false, "sec": "open", "email": {"subject": "Ask us anything", "body": "Hey Team:\n\nFirst time caller, long time listener. lol.\n\nWith regard to the episode from October 9th, episode 690, “It’s show business, baby!”…\n16 years of podcasting. Brought on all those voices from the podcast industry. You love podcasting.\nBut what’s your take on what everyone said?\nThis is a rare episode where you’re in the field where you’re reporting on.\n\nOne guest talked about removing the hobbyists from the professionals…which feels like the bloggers vs the writers for some publication. Or indie filmmakers vs. industry filmmakers. It’s a business, but just like small business fuels the backbone of the US, how do you remove the majority so you’re just left with Marvel movies, remakes, and whatever big business wants to do?\n\nOne guest talked about there being 2 camps, AI content and human content, and finding the audience that wants what they want. So there could be an AI version trying to do what you do, competing against you and what you’ve done for attention.\n\nWould love your opinion on the matter, since you’re in it.\n\nCheers,\nGreg Wasserman\nHead of Relationships at RSS.com and host of Podcast Network Insights"}}, {"key": "r45", "row": 45, "id": "gm-1a17956b6f5b3efb", "who": "Austin Roche, Boston, MA", "date": "Oct 26", "topic": "Ideas and what gets made", "q": "Thinking of the sunk cost fallacy: how do you decide when what you're working on just isn't working, and when to pivot? Is there a process for a pivot?", "tj": ["yes", ""], "ef": ["maybe", ""], "sjd": null, "rel": "", "badge": null, "agreed": false, "all3": false, "sec": "open", "email": {"subject": "Ask Us Anything", "body": "Hello!\n\nI love sunk cost fallacy problems. How do you decide when what you’re working on just isn’t working? How do you decide to pivot? Is there a process to address a pivot?\n\nAlso, love the show!\n\nThanks,\n\nAustin Roche\nBoston, MA"}}, {"key": "r38", "row": 38, "id": "gm-1a1702784f80e942", "who": "Dave McGrath, Sydney, Australia", "date": "Oct 24", "topic": "Ideas and what gets made", "q": "Was there ever an episode topic you were super keen to cover, but the material turned out so bad or disappointing that you canned it?", "tj": ["yes", ""], "ef": ["no", ""], "sjd": null, "rel": "Same ground as Eric Mickelson's killed-episode question, which Ellen wants consolidated to one Q.", "badge": null, "agreed": false, "all3": false, "sec": "open", "email": {"subject": "Ask us anything", "body": "Hi Stephen and team,\n\nBeen listening since the beginning over a decade ago. Since then I’ve lived in 3 different countries, 4 different jobs ,got married, had a kid, bought a house and all that.\n\nMy question is Was there ever a topic for an episode you were super super keen to cover, but when you got into it, the outcome material was so bad or disappointing that you simply canned it?\n\nThanks very much\n\nDave\nSydney Australia"}}, {"key": "r41", "row": 41, "id": "gm-1a172f008657f1ed", "who": "Yoni", "date": "Oct 25", "topic": "Ideas and what gets made", "q": "How do you decide which episodes get a broad array of interviewees and perspectives (like the current A.I. one) versus ones that argue a single point of view or make a hero of one character, and how is that edited accordingly?", "tj": ["yes", ""], "ef": ["no", ""], "sjd": null, "rel": "", "badge": null, "agreed": false, "all3": false, "sec": "open", "email": {"subject": "Ask Us Anything", "body": "Hi, I'm curious to hear how you decide which episodes to product with a broad array of interviewees and perspectives on a subject (like the current AI one) vs others where you seem to be on a tirade about a point of view (either shooting down the current way of doing something or turning a particular character into a hero). It's a dichotomy I've noticed in your work and am curious to hear how this gets decided and edited accordingly. Thanks! Yoni"}}, {"key": "r37", "row": 37, "id": "gm-1a16f471a8b5d130", "who": "pigpiepig09@gmail.com (unsigned)", "date": "Oct 24", "topic": "Writing, sound, fact-checking", "q": "What do you use for your audio mixing program?", "tj": ["no", ""], "ef": ["yes", "Yes; could get very quick short answer from engineer re: ProTools"], "sjd": null, "rel": "", "badge": null, "agreed": false, "all3": false, "sec": "open", "email": {"subject": "Ask Us Anything", "body": "What do you use for your audio mixing program?"}}, {"key": "r48", "row": 48, "id": "gm-1a180a6ea121bd60", "who": "akowriting@gmail.com (unsigned)", "date": "Oct 27", "topic": "Writing, sound, fact-checking", "q": "Does Stephen know his sign-off is more or less the same as Jerry Springer's \"Take care of yourself, and each other\"? Does it have Jewish origins?", "tj": ["no", ""], "ef": ["maybe", "I didn't know this! hah would consider adding this as there is an sjd story to tell about this sign off"], "sjd": null, "rel": "", "badge": null, "agreed": false, "all3": false, "sec": "open", "email": {"subject": "Ask us anything", "body": "Hi!\n\nI love Stephen's sign-off, but I knew that it rang a bell for me. Does he know it's more or less the same thing Jerry Springer would say at the end of his crazy shows \"Take care of yourself, and each other\"?\n\nI'm wondering if it has Jewish origins."}}, {"key": "r2", "row": 2, "id": "grp-GNBHq79sd4c-1", "who": "Bonnie Sindelar", "date": "Oct 9", "topic": "The business and the inbox", "q": "How do you decide which spin-off shows to keep and when to cancel them? What makes you cancel those shows, and what would it take to finally keep one around?", "tj": ["no", ""], "ef": ["maybe", ""], "sjd": null, "rel": "", "badge": null, "agreed": false, "all3": false, "sec": "open", "email": {"subject": "Ask us anything", "body": "With all the spin-off shows that Freakonomics has created over the years, how do you decide which ones to keep and when to cancel the ones that you do? Some of the quicker cancelations didn't surprise me very much, but I was sad and confused to hear that The Economics of Everyday Things was shutting down. I'd love to know what makes you guys cancel those shows and what it would take to finally keep one around. :)\n\nThanks!\nBonnie"}}, {"key": "r50", "row": 50, "id": "gm-1a1876ca896e73d8", "who": "Lt. Col. (ret.) Mike Gill, Lampasas, Texas", "date": "Oct 29", "topic": "Coverage gaps", "q": "Why haven't you yet done a deep dive into the military-industrial complex, picking apart the DoD budget from mom-and-pop nuts-and-bolts manufacturers to big contractors like Lockheed and Anduril, plus the Defense Logistics Agency?", "tj": ["maybe", ""], "ef": ["cond", "Include as part of answer on why we do so little on the military"], "sjd": null, "rel": "", "badge": null, "agreed": false, "all3": false, "sec": "open", "email": {"subject": "Ask us anything", "body": "I have been listening to you for about 5 years now…love whaling series!!\nI have spent 30 years in military or support to Department of Defense and I wonder why you have yet attempted a deep dive into the Military Industrial Complex…the budget of the US government (think NDAA) is a huge chunk of expenditures going to thousands of small and large businesses supporting the DoD/DoW.\nI think it would be interesting to pick that apart from the mom and pop manufacturers machine nuts and bolts to large corporations that contract in the millions/billions (Lockheed/anduril and the like). Defense Logistics Agency for whom I worked for 5 years is a key player in contracts for sustainment support as well.\nIt may surprise your listeners at how ingrained this world is in every day towns/cities across the country.\nThanks\n(LtCol retired)Mike Gill\nLampasas Texas\n\nSent from my iPhone"}}, {"key": "r36", "row": 36, "id": "gm-1a16f1a81609e7c6", "who": "jensen.kirk@gmail.com, Canada", "date": "Oct 24", "topic": "Coverage gaps", "q": "Given a perceived blind spot in episodes touching the U.S. federal government, have you had internal discussions about how the current administration is different? Does the team see it as different only in direction, or as truly different but uncertain how to handle it?", "tj": ["maybe", "Maybe, with rephrase"], "ef": ["no", "Leaning no"], "sjd": null, "rel": "", "badge": null, "agreed": false, "all3": false, "sec": "open", "email": {"subject": "Ask us anything", "body": "Hi,\n\nI'm aware that you are a podcast based in the USA, and that as a result my opinions as a Canadian are not always going to align with those of any or all of the podcast staff. It seems to me however that there is a blind spot in your episodes when anything related to the US Federal government comes up. My question is, have you had internal discussions about how this is different? Does freakonomics see this as different only in direction when compared to earlier (I'll be polite and say administration and not regime) administrations, or does the team see this as different, but there is uncertainty how to handle this?\n\nThanks, a Canadian who has enjoyed, and hopes to continue to enjoy, your\nshow."}}, {"key": "r54", "row": 54, "id": "gm-1a1ad06b278f2a3a", "who": "Carl Jones", "date": "Nov 5", "topic": "The business and the inbox", "q": "Do you have personal knowledge of the products you advertise, and would you take an advertiser whose products you didn't believe in? Do you have data on whether host-read ads are more effective? He also suggests interviewing Kai Ryssdal.", "tj": ["blank", ""], "ef": ["blank", ""], "sjd": null, "rel": "Arrived after the last round of ratings.", "badge": null, "agreed": false, "all3": false, "sec": "open", "email": {"subject": "Ask us anything", "body": "Two things.\n\nFirst, you do a lot or most of your own commercials all just about 30 seconds each. Freakonomics is sponsored by... I wonder two things about that. One do you have any personal interaction or knowledge with the products that you are advertising? Would you take as an advertiser someone whose products or services you didn't believe in? And two, do you have any data on the effectiveness of the podcast host being the one who does the advertisements?\n\nNow to my second thought.\nI listen to marketplace with Kai Risdall. And I noted recently, perhaps in the last month or two at most, that he is now doing some advertisements. Whereas before I never heard him do an ad except for the marketplace organization. So I wonder if he started doing that because there's evidence that the host has an effect on the results of the ad.\n\nAnd finally, I'd like to suggest that you figure out a way to have Kai risdall all on your program. I think he would be very interesting to interview, not only his current job and how he does it, but his progress to get there, and his military service, and his soccer refereeing.\n\nAgain, I do enjoy your show.\nCarl Jones\n\nUnfortunately, the United States doesn't have a fiscal policy, it just has fiscal outcomes.\nBen Steil"}}];
+const SECS = [
+  ["sjd","Stephen flagged","His forwards, with his note on each. The first six line up with questions Theo and Ellen both picked."],
+  ["agree","Theo and Ellen both picked","Both marked Yes in the tracker. Where Ellen wants a merge or reword, her note says so."],
+  ["open","Still open","Theo and Ellen landed in different places, or nobody has rated it yet."]
+];
+const TABS = [
+  ["all","Everything",c=>true],
+  ["sjd","Stephen flagged",c=>!!c.sjd],
+  ["all3","All three",c=>c.all3],
+  ["agree","Theo + Ellen",c=>c.agreed],
+  ["open","Still open",c=>c.sec==="open"],
+  ["picked","Picked",c=>!!picks[c.key]]
+];
+const WORD = {yes:"Yes",cond:"Yes, merge or reword",maybe:"Maybe",no:"No",blank:"Not rated",na:"Not in tracker"};
+const $ = id => document.getElementById(id);
+const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+let state = {tab:"all", s:""};
+let picks = {};
+
+function pill(name, st, word){ const p = el("span","pill "+st); p.append(el("b",null,name), document.createTextNode(" "+word)); return p; }
+function notesBox(key, big){
+  const box = el("div","notes"); box.dataset.notes = key; return box;
+}
+function fillNotesShell(box, big){
+  const key = box.dataset.notes;
+  const list = el("div","note-list"); list.dataset.list = key;
+  const form = el("form","note-form"); form.dataset.form = key;
+  const field = el(big ? "textarea" : "input");
+  field.id = "note-" + key; field.placeholder = big ? "Add a note for the team" : "Add a note on this question";
+  field.setAttribute("aria-label", field.placeholder); if (!big) field.type = "text";
+  const b = el("button","btn","Add note"); b.type = "submit";
+  form.append(field, b);
+  const status = el("p","note-status"); status.dataset.status = key;
+  box.append(list, form, status);
+}
+function card(c){
+  const a = el("article","card"); a.dataset.key = c.key;
+  const top = el("div","card-top");
+  top.append(el("span","label",c.topic));
+  const right = el("div","right");
+  if (c.badge) right.append(el("span","badge"+(c.badge[1]?" soft":""),c.badge[0]));
+  const pk = el("button","pick"); pk.type = "button"; pk.disabled = true; pk.setAttribute("aria-pressed","false");
+  pk.append(el("i",null,"✓"), el("span",null,"Pick"));
+  pk.addEventListener("click", () => togglePick(c));
+  right.append(pk); top.append(right); c.pickBtn = pk;
+  c.pickWho = el("p","pick-who"); c.pickWho.hidden = true;
+  const q = el("button","q"); q.type = "button"; q.setAttribute("aria-expanded","false");
+  q.append(el("span","qt",c.q), el("span","chev"));
+  const from = el("p","from"); from.append(el("b",null,c.who), document.createTextNode(" · " + c.date));
+  const fold = el("div","fold"), inner = el("div"), em = el("div","email");
+  em.append(el("span","label","Listener email" + (c.email.subject ? " · " + c.email.subject : "")));
+  em.append(el("pre",null,c.email.body));
+  em.append(el("p","trace",c.row ? "Tracker row " + c.row + " · " + c.id : "Not in the tracker. Text from Stephen's forward."));
+  inner.append(em); fold.append(inner);
+  q.addEventListener("click", () => { const o = fold.classList.toggle("open"); q.setAttribute("aria-expanded", String(o)); });
+  const votes = el("div","votes");
+  votes.append(pill("Theo", c.tj[0], WORD[c.tj[0]]), pill("Ellen", c.ef[0], WORD[c.ef[0]]),
+    pill("Stephen", c.sjd ? "yes" : "none", c.sjd ? "Flagged " + c.sjd.date : "No forward"));
+  a.append(top, q, from, fold, votes);
+  const says = el("div","says");
+  const say = (n, t) => { const p = el("p"); p.append(el("b",null,n + ": "), document.createTextNode("“" + t + "”")); says.append(p); };
+  if (c.sjd) say("Stephen", c.sjd.note);
+  if (c.tj[1]) say("Theo", c.tj[1]);
+  if (c.ef[1]) say("Ellen", c.ef[1]);
+  if (says.children.length) a.append(says);
+  if (c.rel) a.append(el("p","rel",c.rel));
+  a.append(c.pickWho);
+  const nb = notesBox(c.key); fillNotesShell(nb, false); a.append(nb);
+  c.node = a;
+  c.hay = [c.q,c.who,c.topic,c.tj[1],c.ef[1],c.sjd?c.sjd.note:"",c.rel||"",c.email.body,c.row?"row "+c.row:""].join(" ").toLowerCase();
+  return a;
+}
+function build(){
+  $("tabs").append(...TABS.map(([k,l,fn]) => { const b = el("button","tab",l); b.type="button"; b.dataset.tab=k; const n = el("span",null,String(Q.filter(fn).length)); n.dataset.count = k; b.append(n); return b; }));
+  SECS.forEach(([k,title,blurb]) => {
+    const s = el("section","grp"); s.dataset.sec = k;
+    const cards = el("div","cards");
+    Q.filter(c => c.sec === k).forEach(c => cards.append(card(c)));
+    s.append(el("h2",null,title), el("p",null,blurb), cards); $("out").append(s);
+  });
+  fillNotesShell(document.querySelector('[data-notes="general"]'), true);
+  let prev = null;
+  Q.forEach(c => {
+    const col = el("button","col" + (prev && prev !== c.sec ? " gap" : "")); col.type = "button"; prev = c.sec;
+    col.title = c.who + ": " + c.q; col.setAttribute("aria-label", col.title);
+    c.mapPick = el("span","cell pk");
+    col.append(el("span","cell " + (c.sjd ? "yes" : "none")), el("span","cell " + c.tj[0]), el("span","cell " + c.ef[0]), c.mapPick);
+    col.addEventListener("click", () => {
+      state = {tab:"all", s:""}; $("search").value = ""; apply();
+      c.node.scrollIntoView({behavior:"smooth", block:"center"});
+      c.node.classList.add("flash"); setTimeout(() => c.node.classList.remove("flash"), 1400);
+    });
+    $("map").append(col);
+  });
+}
+function apply(){
+  const fn = TABS.find(t => t[0] === state.tab)[2]; let shown = 0;
+  Q.forEach(c => { const ok = fn(c) && (!state.s || c.hay.includes(state.s)); c.node.hidden = !ok; if (ok) shown++; });
+  document.querySelectorAll("section[data-sec]").forEach(s => { s.hidden = !s.querySelector(".card:not([hidden])"); });
+  document.querySelectorAll(".tab").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.tab === state.tab)));
+  $("general").hidden = state.tab !== "all" || !!state.s;
+  $("none").hidden = shown > 0;
+}
+build(); apply();
+$("tabs").addEventListener("click", e => { const b = e.target.closest("[data-tab]"); if (b){ state.tab = b.dataset.tab; apply(); } });
+$("search").addEventListener("input", e => { state.s = e.target.value.trim().toLowerCase(); apply(); });
+
+/* ---- shared picks and notes ----
+   Saved through a small Apps Script web app attached to the Ask Us Anything Tracker sheet
+   (tabs "Site picks" and "Site notes"). If API is empty, everything stays in this browser. */
+const API = "";
+const LS = "aua.local", LSN = "aua.name";
+let me = ""; try { me = localStorage.getItem(LSN) || ""; } catch (e) {}
+let notes = [], ready = false, busy = 0;
+const shared = !!API;
+const when = ms => { try { return new Date(Number(ms)).toLocaleString([], {month:"short",day:"numeric",hour:"numeric",minute:"2-digit"}); } catch(e){ return ""; } };
+const setStatus = t => document.querySelectorAll("[data-status]").forEach(p => { p.textContent = t; p.hidden = !t; });
+
+function localState(){ try { return JSON.parse(localStorage.getItem(LS)) || {picks:[],notes:[]}; } catch (e) { return {picks:[],notes:[]}; } }
+function localCall(b){
+  const s = localState();
+  if (b){
+    if (b.action === "pick"){ s.picks = s.picks.filter(p => p.key !== b.key); s.picks.push({key:b.key, by:b.by, at:Date.now()}); }
+    if (b.action === "unpick") s.picks = s.picks.filter(p => p.key !== b.key);
+    if (b.action === "note") s.notes.push({id:"n" + Date.now() + Math.random().toString(36).slice(2,6), card:b.card, text:b.text, by:b.by, at:Date.now()});
+    if (b.action === "delnote") s.notes = s.notes.filter(n => n.id !== b.id);
+    try { localStorage.setItem(LS, JSON.stringify(s)); } catch (e) {}
+  }
+  return s;
+}
+async function call(b){
+  if (!shared) return localCall(b);
+  const r = b
+    ? await fetch(API, {method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify(b)})
+    : await fetch(API + "?t=" + Date.now());
+  if (!r.ok) throw new Error("HTTP " + r.status);
+  const j = await r.json(); if (j.error) throw new Error(j.error); return j;
+}
+function applyState(s){
+  picks = {}; (s.picks || []).forEach(p => { picks[p.key] = p; });
+  notes = s.notes || []; ready = true;
+  renderPicks(); renderNotes();
+  setStatus(shared ? "" : "Picks and notes are saved in this browser only.");
+}
+function renderPicks(){
+  const n = Q.filter(c => picks[c.key]).length;
+  const cnt = document.querySelector('[data-count="picked"]'); if (cnt) cnt.textContent = String(n);
+  $("copy").disabled = n === 0;
+  Q.forEach(c => { const p = picks[c.key], on = !!p;
+    c.node.classList.toggle("picked", on); c.mapPick.classList.toggle("on", on);
+    c.pickBtn.disabled = false; c.pickBtn.setAttribute("aria-pressed", String(on)); c.pickBtn.lastChild.textContent = on ? "Picked" : "Pick";
+    c.pickWho.hidden = !on;
+    if (on) c.pickWho.textContent = "Picked by " + (p.by || "someone") + (p.at ? " · " + when(p.at) : ""); });
+  apply();
+}
+function renderNotes(){
+  document.querySelectorAll("[data-list]").forEach(list => {
+    const mine = notes.filter(n => n.card === list.dataset.list).sort((a,b) => (a.at||0) - (b.at||0));
+    list.replaceChildren(...mine.map(n => {
+      const row = el("div","note"), body = el("div","body"), head = el("div");
+      head.append(el("span","who", n.by || "Someone"), el("span","when", when(n.at)));
+      body.append(head, el("p","text", n.text)); row.append(body);
+      if (n.by && n.by === me){
+        const d = el("button","del","Delete"); d.type = "button";
+        d.addEventListener("click", () => act({action:"delnote", id:n.id}, d));
+        row.append(d);
+      }
+      return row;
+    }));
+  });
+}
+async function act(body, btn){
+  if (btn) btn.disabled = true; busy++;
+  try { applyState(await call(body)); return true; }
+  catch (e) { setStatus("That didn't save. Check your connection and try again."); return false; }
+  finally { busy--; if (btn) btn.disabled = false; }
+}
+/* who is this? asked once per device, like a name tag */
+function askName(){
+  return new Promise(res => {
+    if (me) return res(me);
+    const d = $("who");
+    const done = v => { v = (v || "").trim().slice(0,40); if (!v) return; me = v; try { localStorage.setItem(LSN, v); } catch (e) {} showMe(); d.close(); res(v); };
+    d.querySelectorAll("[data-name]").forEach(b => { b.onclick = () => done(b.dataset.name); });
+    $("who-form").onsubmit = e => { e.preventDefault(); done($("who-other").value); };
+    d.addEventListener("close", () => { if (!me) res(""); }, {once:true});
+    d.showModal();
+  });
+}
+function showMe(){ $("me").textContent = me ? "You're " + me + " · change" : "Set your name"; }
+$("me").addEventListener("click", async () => { me = ""; await askName(); renderNotes(); });
+showMe();
+
+async function togglePick(c){
+  if (!ready) return;
+  const who = await askName(); if (!who) return;
+  await act(picks[c.key] ? {action:"unpick", key:c.key, by:who} : {action:"pick", key:c.key, by:who, q:c.q.slice(0,300), from:c.who}, c.pickBtn);
+}
+document.addEventListener("submit", async e => {
+  const f = e.target.closest("[data-form]"); if (!f) return;
+  e.preventDefault();
+  const field = f.querySelector("input,textarea"), text = field.value.trim(); if (!text || !ready) return;
+  const who = await askName(); if (!who) return;
+  const card = f.dataset.form, c = Q.find(x => x.key === card);
+  if (await act({action:"note", card, text:text.slice(0,2000), by:who, q:c ? c.q.slice(0,300) : "Team note"}, f.querySelector("button"))) field.value = "";
+});
+
+const esc = s => String(s).replace(/[&<>]/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[m]));
+function exportDoc(){
+  const sel = Q.filter(c => picks[c.key]);
+  let html = "<h1>Ask Us Anything: picked questions</h1><p>" + sel.length + " questions, copied " + esc(when(Date.now())) + "</p>";
+  let text = "Ask Us Anything: picked questions\n" + sel.length + " questions\n";
+  sel.forEach((c, i) => {
+    const lines = [];
+    lines.push(["From", c.who + ", " + c.date + (c.row ? " (tracker row " + c.row + ")" : "")]);
+    lines.push(["Picked by", picks[c.key].by || "someone"]);
+    if (c.sjd) lines.push(["Stephen", "“" + c.sjd.note + "” (forwarded " + c.sjd.date + ")"]);
+    lines.push(["Theo", WORD[c.tj[0]] + (c.tj[1] ? ": “" + c.tj[1] + "”" : "")]);
+    lines.push(["Ellen", WORD[c.ef[0]] + (c.ef[1] ? ": “" + c.ef[1] + "”" : "")]);
+    notes.filter(n => n.card === c.key).sort((a,b) => (a.at||0) - (b.at||0)).forEach(n => lines.push(["Note, " + (n.by || "team"), n.text]));
+    html += "<h2>" + (i + 1) + ". " + esc(c.q) + "</h2>" + lines.map(l => "<p><b>" + esc(l[0]) + ":</b> " + esc(l[1]) + "</p>").join("")
+      + "<p><b>Listener email:</b></p><blockquote>" + esc(c.email.body).replace(/\n/g, "<br>") + "</blockquote>";
+    text += "\n" + (i + 1) + ". " + c.q + "\n" + lines.map(l => l[0] + ": " + l[1]).join("\n") + "\nListener email:\n" + c.email.body + "\n";
+  });
+  const g = notes.filter(n => n.card === "general").sort((a,b) => (a.at||0) - (b.at||0));
+  if (g.length){
+    html += "<h2>Team notes</h2>" + g.map(n => "<p><b>" + esc(n.by || "Team") + ":</b> " + esc(n.text) + "</p>").join("");
+    text += "\nTeam notes\n" + g.map(n => (n.by || "Team") + ": " + n.text).join("\n") + "\n";
+  }
+  return {html, text};
+}
+$("copy").addEventListener("click", async () => {
+  const b = $("copy"), d = exportDoc(); let ok = false;
+  try {
+    await navigator.clipboard.write([new ClipboardItem({"text/html": new Blob([d.html], {type:"text/html"}), "text/plain": new Blob([d.text], {type:"text/plain"})})]);
+    ok = true;
+  } catch (e) { try { await navigator.clipboard.writeText(d.text); ok = true; } catch (e2) {} }
+  if (ok){ $("copyfall").hidden = true; b.textContent = "Copied. Paste into a Google Doc"; }
+  else { const t = $("copyfall"); t.value = d.text; t.hidden = false; t.focus(); t.select(); b.textContent = "Select all and copy the text below"; }
+  setTimeout(() => { b.textContent = "Copy picks for Google Docs"; }, 4000);
+});
+
+(async function boot(){
+  setStatus("Loading picks and notes…");
+  try { applyState(await call(null)); }
+  catch (e) { setStatus("Can't reach the shared sheet right now. Picks and notes will appear when it's back."); }
+  if (shared) setInterval(async () => {
+    if (document.hidden || busy || $("who").open) return;
+    try { const s = await call(null); if (!busy) applyState(s); } catch (e) {}
+  }, 20000);
+})();
+</script>
+
+</body>
+</html>
