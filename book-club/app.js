@@ -1,5 +1,5 @@
-import { createStore, DEFAULT_SETTINGS } from "./store.js?v=6";
-import { searchBooks, manualBook } from "./lookup.js?v=6";
+import { createStore, DEFAULT_SETTINGS } from "./store.js?v=7";
+import { searchBooks, manualBook } from "./lookup.js?v=7";
 
 /* ------------------------------------------------------------------ */
 /* State                                                               */
@@ -57,8 +57,86 @@ const submitterLine = (book, round) => {
   return el("div", { class: "by" }, "Submitted by ", el("b", {}, memberName(book.submittedBy)));
 };
 
+const ordinal = (n) => `${n}${["th", "st", "nd", "rd"][(n % 100 > 10 && n % 100 < 14) ? 0 : Math.min(n % 10, 4) % 4]}`;
+
+/**
+ * Ranked-choice ballots for a round: each voter's ordered list of book ids, limited to books
+ * still on the ballot and never including their own.
+ */
+function rankedBallots(round, votes) {
+  const byId = new Map(activeBooks(round.id).map((b) => [b.id, b]));
+  const out = [];
+  for (const v of votes) {
+    const seen = new Set();
+    const order = (Array.isArray(v.ranking) ? v.ranking : []).filter((id) => {
+      const b = byId.get(id);
+      if (!b || b.submittedBy === v.voterId || seen.has(id)) return false;
+      seen.add(id); return true;
+    });
+    if (order.length) out.push({ voterId: v.voterId, order });
+  }
+  return out;
+}
+/** A ballot position as 0–100 (top = 100, bottom = 0) so ranked rounds can share the all-time stats. */
+const rankPoints = (pos, len) => (len > 1 ? ((len - 1 - pos) / (len - 1)) * 100 : 100);
+
+function rankedTally(book, round, votes) {
+  const scores = [], ranks = [];
+  for (const b of rankedBallots(round, votes)) {
+    const pos = b.order.indexOf(book.id);
+    if (pos < 0) continue;
+    ranks.push(pos + 1);
+    scores.push(rankPoints(pos, b.order.length));
+  }
+  const n = scores.length;
+  const mean = n ? scores.reduce((a, b) => a + b, 0) / n : null;
+  const sd = n > 1 ? Math.sqrt(scores.reduce((a, b) => a + (b - mean) ** 2, 0) / n) : 0;
+  return { scores, ranks, n, mean, sd, yes: null, read: 0, own: null, firsts: ranks.filter((r) => r === 1).length };
+}
+
+/**
+ * Instant-runoff count. Each ballot counts for its highest-ranked book still standing; the book
+ * with the fewest votes is eliminated and its ballots move to their next choice, until one is left.
+ * Ties for last go to the book ranked lower across all ballots, then the later submission.
+ * Returns the rows in finishing order, with the round-by-round count attached as rows.count.
+ */
+function rankedCount(round) {
+  const votes = roundVotes(round.id);
+  const ballots = rankedBallots(round, votes);
+  const rows = activeBooks(round.id).map((b) => ({ book: b, t: rankedTally(b, round, votes) }));
+  const row = new Map(rows.map((r) => [r.book.id, r]));
+  const total = (r) => r.t.scores.reduce((a, b) => a + b, 0);
+  const standing = new Set(row.keys());
+  const log = [], out = [];
+  let decisive = null;
+  while (standing.size > 1) {
+    const counts = new Map([...standing].map((id) => [id, 0]));
+    let live = 0;
+    for (const b of ballots) {
+      const top = b.order.find((id) => standing.has(id));
+      if (top) { counts.set(top, counts.get(top) + 1); live++; }
+    }
+    const order = [...standing].sort((x, y) =>
+      counts.get(x) - counts.get(y)
+      || total(row.get(x)) - total(row.get(y))
+      || row.get(x).t.n - row.get(y).t.n
+      || (row.get(y).book.submittedAt || 0) - (row.get(x).book.submittedAt || 0));
+    const loser = order[0], leader = order[order.length - 1];
+    log.push({ counts, live, eliminated: loser, leader });
+    if (decisive == null && live && counts.get(leader) * 2 > live) decisive = log.length;
+    standing.delete(loser);
+    out.push(loser);
+    row.get(loser).t.outRound = log.length;
+  }
+  const finish = [...standing, ...out.reverse()];
+  const sorted = finish.map((id, i) => { const r = row.get(id); r.t.place = i + 1; return r; });
+  sorted.count = { log, ballots: ballots.length, decisive: decisive ?? log.length };
+  return sorted;
+}
+
 /** Per-book tally. Submitter's own score is excluded from the mean and kept as a tiebreaker. */
 function tally(book, round, votes) {
+  if (round.mode === "ranked") return rankedTally(book, round, votes);
   const scores = [];
   let read = 0;
   for (const v of votes) {
@@ -75,6 +153,7 @@ function tally(book, round, votes) {
 }
 
 function rankBooks(round) {
+  if (round.mode === "ranked") return rankedCount(round);
   const votes = roundVotes(round.id);
   const rows = activeBooks(round.id).map((b) => ({ book: b, t: tally(b, round, votes) }));
   rows.sort((a, b) => {
@@ -89,7 +168,8 @@ function rankBooks(round) {
 }
 
 /** 0–100 "excitement" so different vote modes can share all-time stats. */
-const normalize = (score, mode) => (mode === "yesno" ? score * 100 : ((score - 1) / 9) * 100);
+const normalize = (score, mode) => (mode === "ranked" ? score : mode === "yesno" ? score * 100 : ((score - 1) / 9) * 100);
+const MODE_LABEL = { ranked: "Ranked choice", yesno: "Yes / No vote", scale: "Excitement, 1–10" };
 
 const fmtScore = (mean, mode) => {
   if (mean == null) return "—";
@@ -128,7 +208,7 @@ async function boot() {
   });
   store.onRounds((rows, err) => {
     if (err) return footer("Can't read rounds. Check the Firestore rules.");
-    state.rounds = [...rows].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+    state.rounds = rows.map((r) => (r.method === "ranked" ? { ...r, mode: "ranked" } : r)).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
     render();
   });
   store.onBooks((rows, err) => { if (!err) { state.books = rows; render(); migrateLegacyReads(); } });
@@ -198,7 +278,9 @@ function wireChrome() {
     const per = Math.max(1, Math.min(5, parseInt($("#roundPer").value, 10) || 2));
     const anonymous = $("#roundAnon").checked;
     $("#dlgRound").close();
-    await state.store.addRound({ name, mode, booksPerMember: per, anonymous, status: "submitting", createdAt: Date.now(), winnerIds: [] });
+    // Ranked choice is saved as method:"ranked" on a "scale" round, so the database rules already in place accept it.
+    const how = mode === "ranked" ? { mode: "scale", method: "ranked" } : { mode };
+    await state.store.addRound({ name, ...how, booksPerMember: per, anonymous, status: "submitting", createdAt: Date.now(), winnerIds: [] });
     state.view = "now"; render();
     toast("Round open for submissions");
   });
@@ -360,7 +442,7 @@ function renderNow() {
     frag.append(el("div", { class: "card card-hero stack" },
       el("span", { class: "eyebrow" }, "No round yet"),
       el("h2", { class: "round-title" }, "Start the first round"),
-      el("p", { class: "muted", style: "margin:0" }, `Everyone submits ${state.settings.booksPerMember} books, everyone else rates them, and the club picks from the top of the pile.`),
+      el("p", { class: "muted", style: "margin:0" }, `Everyone submits ${state.settings.booksPerMember} books, everyone else ranks them, and the club picks from the top of the pile.`),
       el("div", { class: "round-actions" },
         el("button", { class: "btn btn-primary", onclick: openNewRound }, "Start a round"),
         el("button", { class: "btn btn-ghost", onclick: openClubDialog }, "Club settings"))));
@@ -381,6 +463,7 @@ function renderNow() {
     const need = books.filter((b) => b.submittedBy !== m.id);
     if (!need.length) return false;
     const v = votes.find((x) => x.voterId === m.id);
+    if (round.mode === "ranked") return !!v && need.every((b) => (v.ranking || []).includes(b.id));
     return v && need.every((b) => typeof v.scores?.[b.id] === "number" || v.read?.[b.id]);
   });
   const submittersDone = new Set(books.map((b) => b.submittedBy)).size;
@@ -392,7 +475,7 @@ function renderNow() {
       el("button", { class: "btn btn-ghost btn-sm", onclick: openClubDialog }, "Settings")),
     el("h2", { class: "round-title" }, round.name),
     el("div", { class: "round-meta" },
-      el("span", {}, round.mode === "yesno" ? "Yes / No vote" : "Excitement, 1–10"),
+      el("span", {}, MODE_LABEL[round.mode] || MODE_LABEL.scale),
       el("span", {}, `${per} book${per > 1 ? "s" : ""} each`),
       el("span", { class: "num" }, `${books.length} submitted`),
       isAnonymous(round) ? el("span", {}, "Anonymous until the reveal") : null),
@@ -409,7 +492,7 @@ function renderNow() {
     hero.append(
       el("div", { class: "stack", style: "gap:6px" },
         el("div", { class: "row spread small muted" },
-          el("span", {}, `${votersDone.length} of ${members.length} have voted on everything`),
+          el("span", {}, `${votersDone.length} of ${members.length} have ${round.mode === "ranked" ? "ranked" : "voted on"} everything`),
           el("span", { class: "num" }, `${pct}%`)),
         el("div", { class: "progress" }, el("i", { style: `width:${pct}%` }))),
       el("div", { class: "round-actions" },
@@ -455,6 +538,24 @@ function renderNow() {
 
   // Everyone else's books — vote here
   const others = books.filter((b) => b.submittedBy !== state.meId).sort((a, b) => (a.submittedAt || 0) - (b.submittedAt || 0));
+  if (round.mode === "ranked") {
+    const order = myRanking(round);
+    const pos = (b) => order.indexOf(b.id);
+    const ranked = others.filter((b) => pos(b) >= 0).sort((a, b) => pos(a) - pos(b));
+    const unranked = others.filter((b) => pos(b) < 0);
+    frag.append(el("section", { class: "stack" },
+      el("div", { class: "row spread" },
+        el("h3", { class: "section-title" }, "Rank the others"),
+        el("span", { class: "small muted num" }, others.length ? `${ranked.length} of ${others.length} ranked` : "")),
+      others.length
+        ? el("p", { class: "muted small", style: "margin:0" }, "Tap books in the order you'd want to read them: first choice first. If your top choice is knocked out, your vote moves to your next one. Leave a book unranked and it never gets your vote.")
+        : null,
+      ranked.length ? el("div", { class: "shelf" }, ranked.map((b) => bookCard(b, round, votes, { vote: true, rank: pos(b) + 1 }))) : null,
+      ranked.length && unranked.length ? el("div", { class: "small muted", style: "margin-top:4px" }, "Not ranked yet") : null,
+      unranked.length ? el("div", { class: "shelf" }, unranked.map((b) => bookCard(b, round, votes, { vote: true }))) : null,
+      others.length ? null : el("div", { class: "empty" }, books.length ? "Nothing to rank yet — only your own books are in." : "No books submitted yet."),
+    ));
+  } else {
   frag.append(el("section", { class: "stack" },
     el("div", { class: "row spread" },
       el("h3", { class: "section-title" }, "Rate the others"),
@@ -463,6 +564,7 @@ function renderNow() {
       ? el("div", { class: "shelf" }, others.map((b) => bookCard(b, round, votes, { vote: true })))
       : el("div", { class: "empty" }, books.length ? "Nothing to rate yet — only your own books are in." : "No books submitted yet."),
   ));
+  }
 
   // Off the ballot: books someone had already read
   const othersRetired = retired.filter((b) => b.submittedBy !== state.meId);
@@ -527,7 +629,9 @@ function bookCard(book, round, votes, opts = {}) {
     return card;
   }
   if (opts.mine) {
-    body.append(ownScoreControl(book, round));
+    body.append(round.mode === "ranked"
+      ? el("div", { class: "vote" }, el("div", { class: "vote-head" }, el("span", {}, "Your own pick stays off your ballot. Everyone else ranks it.")))
+      : ownScoreControl(book, round));
     if (round.status === "submitting") {
       body.append(el("div", { class: "row" },
         el("button", { class: "btn btn-ghost btn-sm btn-danger", onclick: () => removeBook(book) }, "Remove")));
@@ -559,7 +663,53 @@ function ownScoreControl(book, round) {
   return box;
 }
 
+/** My ranking for this round: book ids, first choice first, limited to books I can still vote on. */
+function myRanking(round) {
+  const mine = state.votes.find((v) => v.id === `${round.id}_${state.meId}`);
+  const ok = new Set(activeBooks(round.id).filter((b) => b.submittedBy !== state.meId).map((b) => b.id));
+  return [...new Set(Array.isArray(mine?.ranking) ? mine.ranking : [])].filter((id) => ok.has(id));
+}
+
+async function saveRanking(round, order) {
+  if (!requireMe()) return;
+  const id = `${round.id}_${state.meId}`;
+  const existing = state.votes.find((v) => v.id === id);
+  try {
+    await state.store.setVote(id, {
+      roundId: round.id, voterId: state.meId,
+      scores: { ...(existing?.scores || {}) }, read: { ...(existing?.read || {}) },
+      ranking: order, updatedAt: Date.now(),
+    });
+  } catch (err) { console.error(err); toast("Couldn't save. Try again."); }
+}
+
+function rankControl(book, round) {
+  const order = myRanking(round);
+  const i = order.indexOf(book.id);
+  const move = (to) => { const next = order.filter((id) => id !== book.id); next.splice(to, 0, book.id); saveRanking(round, next); };
+  const readBtn = el("button", {
+    type: "button", class: "btn btn-sm btn-ghost", title: "Takes this book off the ballot for everyone",
+    onclick: () => retireBook(book),
+  }, "Already read it");
+  const box = el("div", { class: "vote" });
+  if (i < 0) {
+    box.append(el("div", { class: "rank-row" },
+      el("button", { type: "button", class: "btn btn-sm rank-add", onclick: () => saveRanking(round, [...order, book.id]) }, `Make it my ${ordinal(order.length + 1)} choice`),
+      readBtn));
+    return box;
+  }
+  box.append(
+    el("div", { class: "vote-head" }, el("span", {}, el("span", { class: "vote-word" }, `Your ${ordinal(i + 1)} choice`))),
+    el("div", { class: "rank-row" },
+      el("button", { type: "button", class: "btn btn-sm", disabled: i === 0, "aria-label": `Move ${book.title} up`, onclick: () => move(i - 1) }, "▲ Up"),
+      el("button", { type: "button", class: "btn btn-sm", disabled: i === order.length - 1, "aria-label": `Move ${book.title} down`, onclick: () => move(i + 1) }, "▼ Down"),
+      el("button", { type: "button", class: "btn btn-sm btn-ghost", onclick: () => saveRanking(round, order.filter((id) => id !== book.id)) }, "Unrank"),
+      readBtn));
+  return box;
+}
+
 function voteControl(book, round, votes) {
+  if (round.mode === "ranked") return rankControl(book, round);
   const my = votes.find((v) => v.voterId === state.meId);
   const cur = my?.scores?.[book.id];
   const has = typeof cur === "number";
@@ -573,6 +723,7 @@ function voteControl(book, round, votes) {
       roundId: round.id, voterId: state.meId,
       scores: { ...(existing?.scores || {}), [book.id]: value },
       read: { ...(existing?.read || {}) },
+      ...(existing?.ranking ? { ranking: existing.ranking } : {}),
       updatedAt: Date.now(),
     });
   };
@@ -608,6 +759,15 @@ function yesNoButtons(current, onPick) {
 }
 
 function resultReadout(book, round, t) {
+  if (round.mode === "ranked") {
+    return el("div", { class: "stack", style: "gap:4px" },
+      el("div", { class: "score" },
+        el("div", {},
+          el("div", { class: "score-num" }, String(t.firsts)),
+          el("div", { class: "score-sub" }, t.n ? `first-choice vote${t.firsts === 1 ? "" : "s"} · on ${t.n} ballot${t.n === 1 ? "" : "s"}` : "nobody ranked it")),
+        el("div", { class: "meter" }, el("i", { style: `width:${t.mean == null ? 0 : t.mean}%` }))),
+      t.n ? el("div", { class: "small muted num" }, `Ranked: ${[...t.ranks].sort((a, b) => a - b).map(ordinal).join(" · ")}`) : null);
+  }
   const box = el("div", { class: "score" },
     el("div", {},
       el("div", { class: "score-num" }, fmtScore(t.mean, round.mode)),
@@ -628,7 +788,7 @@ function renderResults(round) {
   const rows = rankBooks(round);
   const winners = new Set(round.winnerIds || []);
   const votes = roundVotes(round.id);
-  const voters = new Set(votes.filter((v) => Object.keys(v.scores || {}).length).map((v) => v.voterId)).size;
+  const voters = round.mode === "ranked" ? rows.count.ballots : new Set(votes.filter((v) => Object.keys(v.scores || {}).length).map((v) => v.voterId)).size;
   const rated = rows.filter((r) => r.t.n > 0);
 
   const sec = el("section", { class: "stack" });
@@ -636,7 +796,32 @@ function renderResults(round) {
     el("h3", { class: "section-title" }, "Results"),
     el("span", { class: "small muted" }, `${voters} voted · tap a book to toggle it as a pick`)));
 
-  if (rated.length) {
+  if (round.mode === "ranked" && rated.length) {
+    const { log, decisive } = rows.count;
+    const title = (id) => rows.find((r) => r.book.id === id)?.book.title || "?";
+    const won = log[decisive - 1];
+    const div = [...rated].filter((r) => r.t.n > 1).sort((a, b) => b.t.sd - a.t.sd)[0];
+    sec.append(el("div", { class: "tiles" },
+      tile("Winner", rows[0].book.title, !won ? "the only book standing"
+        : won.counts.get(rows[0].book.id) * 2 > won.live ? `${won.counts.get(rows[0].book.id)} of ${won.live} votes in round ${decisive}`
+        : `tied ${won.counts.get(rows[0].book.id)}–${won.counts.get(won.eliminated)} in the final round; ranked higher overall`),
+      rows.length > 1 && rows[1].t.n ? tile("Runner-up", rows[1].book.title, `${rows[1].t.firsts} first-choice vote${rows[1].t.firsts === 1 ? "" : "s"}`) : null,
+      div && div.t.sd > 0 ? tile("Most divisive", div.book.title, `ranked anywhere from ${ordinal(Math.min(...div.t.ranks))} to ${ordinal(Math.max(...div.t.ranks))}`) : null,
+    ));
+    if (log.length) {
+      sec.append(el("details", { class: "count" },
+        el("summary", {}, "How the count went"),
+        el("ol", { class: "count-list" }, log.slice(0, decisive).map((step, i) => {
+          const line = [...step.counts].sort((a, b) => b[1] - a[1]).map(([id, n]) => `${title(id)} ${n}`).join(" · ");
+          const end = i === decisive - 1 && step.counts.get(step.leader) * 2 > step.live
+            ? `${title(step.leader)} has a majority.`
+            : i === log.length - 1 ? `A tie. ${title(step.leader)} takes it for ranking higher across all ballots.`
+            : `${title(step.eliminated)} is out; its votes move to their next choice.`;
+          return el("li", {}, el("span", { class: "num" }, line), el("div", { class: "small muted" }, end));
+        })),
+        el("p", { class: "small muted", style: "margin:6px 0 0" }, "Each ballot counts for its highest-ranked book still standing. The order below the winner is the order books would have been knocked out.")));
+    }
+  } else if (rated.length) {
     const top = rated[0], low = rated[rated.length - 1];
     const div = [...rated].filter((r) => r.t.n > 1).sort((a, b) => b.t.sd - a.t.sd)[0];
     sec.append(el("div", { class: "tiles" },
@@ -700,6 +885,8 @@ function renderShelf() {
 
 /* ---------- Stats ---------- */
 
+const SPREAD = { yesno: 1, scale: 9, ranked: 100 };
+
 function renderStats() {
   const root = $("#view-stats");
   const frag = document.createDocumentFragment();
@@ -727,12 +914,14 @@ function renderStats() {
   if (allRows.length) {
     const top = allRows.slice(0, 5);
     const low = [...allRows].reverse().slice(0, Math.min(5, Math.max(0, allRows.length - 5)));
-    const divisive = allRows.filter((r) => r.t.n > 1).sort((a, b) => b.t.sd / (b.round.mode === "yesno" ? 1 : 9) - a.t.sd / (a.round.mode === "yesno" ? 1 : 9)).slice(0, 3);
+    const divisive = allRows.filter((r) => r.t.n > 1).sort((a, b) => b.t.sd / SPREAD[b.round.mode] - a.t.sd / SPREAD[a.round.mode]).slice(0, 3);
 
     frag.append(section("Most excited about, ever", bars(top, false)));
     if (low.length) frag.append(section("Least excited about", bars(low, true)));
     if (divisive.length) frag.append(section("Most divisive", bars(divisive, false, (r) =>
-      r.round.mode === "yesno" ? `${r.t.yes} yes / ${r.t.n - r.t.yes} no` : `${Math.min(...r.t.scores)}–${Math.max(...r.t.scores)}`)));
+      r.round.mode === "yesno" ? `${r.t.yes} yes / ${r.t.n - r.t.yes} no`
+        : r.round.mode === "ranked" ? `ranked ${ordinal(Math.min(...r.t.ranks))}–${ordinal(Math.max(...r.t.ranks))}`
+        : `${Math.min(...r.t.scores)}–${Math.max(...r.t.scores)}`)));
   }
 
   // Member table
@@ -744,7 +933,8 @@ function renderStats() {
       for (const r of decided) {
         const votes = roundVotes(r.id);
         const v = votes.find((x) => x.voterId === m.id);
-        if (v) for (const [bid, s] of Object.entries(v.scores || {})) {
+        // A ranking can't be generous or stingy, so ranked rounds are left out of Generosity.
+        if (r.mode !== "ranked" && v) for (const [bid, s] of Object.entries(v.scores || {})) {
           const b = state.books.find((x) => x.id === bid);
           if (b && b.submittedBy !== m.id && typeof s === "number") given.push(normalize(s, r.mode));
         }
@@ -764,7 +954,7 @@ function renderStats() {
         el("td", { class: "num" }, String(s.wins)),
         el("td", { class: "num" }, s.received == null ? "—" : String(s.received)),
         el("td", { class: "num" }, s.given == null ? "—" : String(s.given))))))),
-      el("p", { class: "small muted", style: "margin:6px 0 0" }, "Taste: average excitement others gave this person's books. Generosity: average they gave everyone else's. Both on 0–100 so 1–10 and yes/no rounds can be compared.")));
+      el("p", { class: "small muted", style: "margin:6px 0 0" }, "Taste: average excitement others gave this person's books. Generosity: average they gave everyone else's. Both on 0–100 so 1–10, yes/no and ranked-choice rounds can be compared (in a ranked round, a first choice is 100 and a last choice is 0; ranked rounds don't count toward Generosity).")));
   }
 
   root.replaceChildren(frag);

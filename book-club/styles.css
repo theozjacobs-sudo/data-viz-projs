@@ -336,3 +336,11 @@ tr:last-child td { border-bottom: 0; }
 .retired-line { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 6px; }
 .tag-read { font-size: .72rem; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; padding: 3px 8px; border-radius: 999px; background: var(--no-soft); color: var(--no); }
 .notice { padding: 10px 12px; border-radius: var(--radius); background: var(--ribbon-soft); border: 1px solid var(--ribbon); font-size: .9rem; }
+
+/* Ranked-choice ballot */
+.rank-row { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.rank-row .btn-ghost:last-child { margin-left: auto; }
+.rank-add { background: var(--accent-soft); border-color: var(--accent); color: var(--ink); font-weight: 600; }
+.count { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 10px 14px; font-size: .9rem; }
+.count summary { cursor: pointer; font-weight: 600; }
+.count-list { margin: 10px 0 0; padding-left: 20px; display: flex; flex-direction: column; gap: 8px; }

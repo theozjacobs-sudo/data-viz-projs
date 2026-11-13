@@ -3,10 +3,10 @@
 A small web app for picking book club books without settling for the lowest common denominator.
 
 - Everyone submits two books (typed in, looked up on Open Library, real cover pulled).
-- Everyone rates everyone else's books: excitement on a 1–10 slider, or a plain yes/no, chosen per round.
+- Everyone votes on everyone else's books. The default is ranked choice: tap the books in order of preference, and the count is an instant runoff (the book with the fewest votes drops out and its ballots move to their next choice until one book has a majority). A 1–10 excitement slider and a plain yes/no are still available per round.
 - Submissions are anonymous until the results are revealed (per-round setting, on by default), so people vote on the book, not the friend.
 - Already read a book someone submitted? Tap "Already read it": the book comes off the ballot for everyone, and whoever suggested it gets to suggest a replacement (even after submissions close). The person who tapped can undo it until the replacement is in.
-- Submitters rate their own book too, but that only breaks ties.
+- Your own books stay off your ballot. (In 1–10 and yes/no rounds you rate them too, but that only breaks ties.)
 - Reveal the results: ranked list, most and least exciting, most divisive. Tap books to mark the ones you'll actually read.
 - The Shelf keeps every round and every book ever put forward. Stats tracks the club over time, including who has the best taste and who is the softest grader.
 
@@ -44,13 +44,15 @@ The config is safe to commit: it only identifies the project. Access is governed
 ## Using it
 
 - **Voting as**: tap the name chip at the top, pick yourself or add your name. It's remembered on that device.
-- **Start a round**: choose 1–10 or yes/no and how many books each person submits.
+- **Start a round**: choose ranked choice, 1–10 or yes/no, and how many books each person submits.
 - **Submit**: search, tap the right edition. If Open Library doesn't have it, add it by hand.
 - **Close submissions, open voting**: anyone in the club can move the round along. People can change votes until results are revealed.
 - **Close voting & reveal**: ranks the books. The top book is marked as the pick; tap other books to add or remove picks (useful when you're choosing two).
 - **Shelf** and **Stats** are always on.
 
 Ranking: average of the other members' scores. Ties go to whichever submitter was more excited about their own book, then to the book with more votes.
+
+Ranked-choice rounds: instant runoff. A tie for last place goes against the book ranked lower across all ballots. Ranked rounds are stored as `method: "ranked"` on a round whose `mode` is `scale`, so the Firestore rules above need no change.
 
 ## Files
 
